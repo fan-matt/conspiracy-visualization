@@ -1,0 +1,476 @@
+{
+    "data": [
+        {
+            "id": 1,
+            "title": "CS 1",
+            "type": "required",
+            "description": "Useless",
+            "to": [],
+            "taken": true
+        },
+        {
+            "id": 2,
+            "title": "CS 31",
+            "type": "required",
+            "description": "Smallberg Pog",
+            "to": [
+                3,
+                5,
+                37
+            ],
+            "taken": true
+        },
+        {
+            "id": 3,
+            "title": "CS 32",
+            "type": "required",
+            "description": "Suffer",
+            "to": [
+                4,
+                5,
+                9,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43
+            ],
+            "taken": true
+        },
+        {
+            "id": 4,
+            "title": "CS 33",
+            "type": "required",
+            "description": "Pain in my big endian",
+            "to": [
+                21,
+                6,
+                7,
+                28,
+                29
+            ],
+            "taken": true
+        },
+        {
+            "id": 5,
+            "title": "CS 35L",
+            "type": "required",
+            "description": "Truer Suffer",
+            "to": [
+                6,
+                7
+            ],
+            "taken": true
+        },
+        {
+            "id": 6,
+            "title": "CS 111",
+            "type": "required",
+            "description": "Truest Suffer",
+            "to": [
+                24,
+                25,
+                11,
+                12
+            ],
+            "taken": false
+        },
+        {
+            "id": 7,
+            "title": "CS 131",
+            "type": "required",
+            "description": "OCaml is F tier, complete trash",
+            "to": [
+                12,
+                30,
+                44
+            ],
+            "taken": true
+        },
+        {
+            "id": 8,
+            "title": "Math 61",
+            "type": "required",
+            "description": "Euler cycle Pog",
+            "to": [
+                9
+            ],
+            "taken": true
+        },
+        {
+            "id": 9,
+            "title": "CS 180",
+            "type": "required",
+            "description": "Truester Suffer, none makes me suffer more",
+            "to": [
+                10,
+                31,
+                32,
+                33,
+                34
+            ],
+            "taken": true
+        },
+        {
+            "id": 10,
+            "title": "CS 181",
+            "type": "required",
+            "description": "Minecraft is Turing Complete",
+            "to": [],
+            "taken": true
+        },
+        {
+            "id": 11,
+            "title": "CS 118",
+            "type": "required",
+            "description": "Computer Networks",
+            "to": [
+                27
+            ],
+            "taken": false
+        },
+        {
+            "id": 12,
+            "title": "CS 130",
+            "type": "capstone",
+            "description": "Software Engineering",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 13,
+            "title": "Phys 1C",
+            "type": "required",
+            "description": "Laplace Pog",
+            "to": [
+                47
+            ],
+            "taken": false
+        },
+        {
+            "id": 14,
+            "title": "Math 33A",
+            "type": "required",
+            "description": "Feeling lost? Consult your identity matrix.",
+            "to": [
+                47,
+                49
+            ],
+            "taken": true
+        },
+        {
+            "id": 15,
+            "title": "Math 33B",
+            "type": "required",
+            "description": "sin(x)=x",
+            "to": [
+                47,
+                31
+            ],
+            "taken": true
+        },
+        {
+            "id": 17,
+            "title": "Math 170A",
+            "type": "required",
+            "description": "Infinite Improbability Drive",
+            "to": [
+                38,
+                39,
+                40,
+                41,
+                29,
+                24
+            ],
+            "taken": true
+        },
+        {
+            "id": 18,
+            "title": "Ethics",
+            "type": "required",
+            "description": "If only everyone followed them more",
+            "to": [
+                22,
+                12
+            ],
+            "taken": false
+        },
+        {
+            "id": 19,
+            "title": "CS M51A",
+            "type": "required",
+            "description": "K-map go brrrrrr",
+            "to": [
+                48,
+                20,
+                21
+            ],
+            "taken": true
+        },
+        {
+            "id": 20,
+            "title": "CS M152A",
+            "type": "required",
+            "description": "what is this",
+            "to": [
+                21
+            ],
+            "taken": false
+        },
+        {
+            "id": 21,
+            "title": "CS M151B",
+            "type": "required",
+            "description": "what is this as well",
+            "to": [
+                22,
+                23
+            ],
+            "taken": false
+        },
+        {
+            "id": 22,
+            "title": "CS 152B",
+            "type": "cseonly",
+            "description": "I also don't know what this is",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 23,
+            "title": "CS 133",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 24,
+            "title": "CS 112",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 25,
+            "title": "CS 143",
+            "type": "elective",
+            "description": "idk",
+            "to": [
+                26
+            ],
+            "taken": false
+        },
+        {
+            "id": 26,
+            "title": "CS 144",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 27,
+            "title": "CS 136",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 28,
+            "title": "CS M119",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 29,
+            "title": "CS M146",
+            "type": "elective",
+            "description": "Be accurate but not too accurate",
+            "to": [],
+            "taken": true
+        },
+        {
+            "id": 30,
+            "title": "CS 132",
+            "type": "elective",
+            "description": "Optimizing my code for me",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 31,
+            "title": "CS 170A",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 32,
+            "title": "CS 161",
+            "type": "elective",
+            "description": "((((((((((Lisp))))))))))",
+            "to": [],
+            "taken": true
+        },
+        {
+            "id": 33,
+            "title": "CS 145",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 34,
+            "title": "CS 183",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 35,
+            "title": "CS 174B",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 36,
+            "title": "CS C174C",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 37,
+            "title": "CS M184",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 38,
+            "title": "CS CM121",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 39,
+            "title": "CS CM122",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 40,
+            "title": "CS CM124",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 41,
+            "title": "CS 168",
+            "type": "elective",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 42,
+            "title": "CS 174A",
+            "type": "elective",
+            "description": "RTX On",
+            "to": [
+                35,
+                36
+            ],
+            "taken": false
+        },
+        {
+            "id": 43,
+            "title": "CS 172",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 44,
+            "title": "CS C137A",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [
+                45
+            ],
+            "taken": false
+        },
+        {
+            "id": 45,
+            "title": "CS C137B",
+            "type": "notoffered",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 46,
+            "title": "ECE 3",
+            "type": "cseonly",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 47,
+            "title": "ECE 100",
+            "type": "cseonly",
+            "description": "idk",
+            "to": [
+                48
+            ],
+            "taken": false
+        },
+        {
+            "id": 48,
+            "title": "ECE 115C",
+            "type": "cseonly",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 49,
+            "title": "ECE 102",
+            "type": "cseonly",
+            "description": "idk",
+            "to": [],
+            "taken": false
+        },
+        {
+            "id": 50,
+            "title": "CS30",
+            "type": "optional",
+            "description": "Baby Steps",
+            "to": [
+                2
+            ],
+            "taken": false
+        }
+    ]
+}
