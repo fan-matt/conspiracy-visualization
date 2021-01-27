@@ -1,4 +1,4 @@
-#Graph Demo
+# Graph Demo
 
 This is a small prototype of a graph explorer that will eventually see itself absorbed into a bigger project.
 
