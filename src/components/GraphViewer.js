@@ -43,6 +43,10 @@ function GraphViewer(props) {
                         case 'optional':
                             fillStyle = 'lightgreen';
                             break;
+                        
+                        default:
+                            fillStyle = 'black'
+                            break;
                     }
                     ctx.fillStyle = fillStyle;
                     ctx.fill()
