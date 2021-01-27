@@ -1,476 +1,679 @@
 {
-    "data": [
+    "nodes": [
         {
-            "id": 1,
-            "title": "CS 1",
-            "type": "required",
-            "description": "Useless",
-            "to": [],
-            "taken": true
+            "id": "1",
+            "name": "CS 1",
+            "val": {
+                "type": "required",
+                "description": "Useless",
+                "taken": true
+            }
         },
         {
-            "id": 2,
-            "title": "CS 31",
-            "type": "required",
-            "description": "Smallberg Pog",
-            "to": [
-                3,
-                5,
-                37
-            ],
-            "taken": true
+            "id": "2",
+            "name": "CS 31",
+            "val": {
+                "type": "required",
+                "description": "Smallberg Pog",
+                "taken": true
+            }
         },
         {
-            "id": 3,
-            "title": "CS 32",
-            "type": "required",
-            "description": "Suffer",
-            "to": [
-                4,
-                5,
-                9,
-                38,
-                39,
-                40,
-                41,
-                42,
-                43
-            ],
-            "taken": true
+            "id": "3",
+            "name": "CS 32",
+            "val": {
+                "type": "required",
+                "description": "Suffer",
+                "taken": true
+            }
         },
         {
-            "id": 4,
-            "title": "CS 33",
-            "type": "required",
-            "description": "Pain in my big endian",
-            "to": [
-                21,
-                6,
-                7,
-                28,
-                29
-            ],
-            "taken": true
+            "id": "4",
+            "name": "CS 33",
+            "val": {
+                "type": "required",
+                "description": "Pain in my big endian",
+                "taken": true
+            }
         },
         {
-            "id": 5,
-            "title": "CS 35L",
-            "type": "required",
-            "description": "Truer Suffer",
-            "to": [
-                6,
-                7
-            ],
-            "taken": true
+            "id": "5",
+            "name": "CS 35L",
+            "val": {
+                "type": "required",
+                "description": "Truer Suffer",
+                "taken": true
+            }
         },
         {
-            "id": 6,
-            "title": "CS 111",
-            "type": "required",
-            "description": "Truest Suffer",
-            "to": [
-                24,
-                25,
-                11,
-                12
-            ],
-            "taken": false
+            "id": "6",
+            "name": "CS 111",
+            "val": {
+                "type": "required",
+                "description": "Truest Suffer",
+                "taken": false
+            }
         },
         {
-            "id": 7,
-            "title": "CS 131",
-            "type": "required",
-            "description": "OCaml is F tier, complete trash",
-            "to": [
-                12,
-                30,
-                44
-            ],
-            "taken": true
+            "id": "7",
+            "name": "CS 131",
+            "val": {
+                "type": "required",
+                "description": "OCaml is F tier, complete trash",
+                "taken": true
+            }
         },
         {
-            "id": 8,
-            "title": "Math 61",
-            "type": "required",
-            "description": "Euler cycle Pog",
-            "to": [
-                9
-            ],
-            "taken": true
+            "id": "8",
+            "name": "Math 61",
+            "val": {
+                "type": "required",
+                "description": "Euler cycle Pog",
+                "taken": true
+            }
         },
         {
-            "id": 9,
-            "title": "CS 180",
-            "type": "required",
-            "description": "Truester Suffer, none makes me suffer more",
-            "to": [
-                10,
-                31,
-                32,
-                33,
-                34
-            ],
-            "taken": true
+            "id": "9",
+            "name": "CS 180",
+            "val": {
+                "type": "required",
+                "description": "Truester Suffer, none makes me suffer more",
+                "taken": true
+            }
         },
         {
-            "id": 10,
-            "title": "CS 181",
-            "type": "required",
-            "description": "Minecraft is Turing Complete",
-            "to": [],
-            "taken": true
+            "id": "10",
+            "name": "CS 181",
+            "val": {
+                "type": "required",
+                "description": "Minecraft is Turing Complete",
+                "taken": true
+            }
         },
         {
-            "id": 11,
-            "title": "CS 118",
-            "type": "required",
-            "description": "Computer Networks",
-            "to": [
-                27
-            ],
-            "taken": false
+            "id": "11",
+            "name": "CS 118",
+            "val": {
+                "type": "required",
+                "description": "Computer Networks",
+                "taken": false
+            }
         },
         {
-            "id": 12,
-            "title": "CS 130",
-            "type": "capstone",
-            "description": "Software Engineering",
-            "to": [],
-            "taken": false
+            "id": "12",
+            "name": "CS 130",
+            "val": {
+                "type": "capstone",
+                "description": "Software Engineering",
+                "taken": false
+            }
         },
         {
-            "id": 13,
-            "title": "Phys 1C",
-            "type": "required",
-            "description": "Laplace Pog",
-            "to": [
-                47
-            ],
-            "taken": false
+            "id": "13",
+            "name": "Phys 1C",
+            "val": {
+                "type": "required",
+                "description": "Laplace Pog",
+                "taken": false
+            }
         },
         {
-            "id": 14,
-            "title": "Math 33A",
-            "type": "required",
-            "description": "Feeling lost? Consult your identity matrix.",
-            "to": [
-                47,
-                49
-            ],
-            "taken": true
+            "id": "14",
+            "name": "Math 33A",
+            "val": {
+                "type": "required",
+                "description": "Feeling lost? Consult your identity matrix.",
+                "taken": true
+            }
         },
         {
-            "id": 15,
-            "title": "Math 33B",
-            "type": "required",
-            "description": "sin(x)=x",
-            "to": [
-                47,
-                31
-            ],
-            "taken": true
+            "id": "15",
+            "name": "Math 33B",
+            "val": {
+                "type": "required",
+                "description": "sin(x)=x",
+                "taken": true
+            }
         },
         {
-            "id": 17,
-            "title": "Math 170A",
-            "type": "required",
-            "description": "Infinite Improbability Drive",
-            "to": [
-                38,
-                39,
-                40,
-                41,
-                29,
-                24
-            ],
-            "taken": true
+            "id": "17",
+            "name": "Math 170A",
+            "val": {
+                "type": "required",
+                "description": "Infinite Improbability Drive",
+                "taken": true
+            }
         },
         {
-            "id": 18,
-            "title": "Ethics",
-            "type": "required",
-            "description": "If only everyone followed them more",
-            "to": [
-                22,
-                12
-            ],
-            "taken": false
+            "id": "18",
+            "name": "Ethics",
+            "val": {
+                "type": "required",
+                "description": "If only everyone followed them more",
+                "taken": false
+            }
         },
         {
-            "id": 19,
-            "title": "CS M51A",
-            "type": "required",
-            "description": "K-map go brrrrrr",
-            "to": [
-                48,
-                20,
-                21
-            ],
-            "taken": true
+            "id": "19",
+            "name": "CS M51A",
+            "val": {
+                "type": "required",
+                "description": "K-map go brrrrrr",
+                "taken": true
+            }
         },
         {
-            "id": 20,
-            "title": "CS M152A",
-            "type": "required",
-            "description": "what is this",
-            "to": [
-                21
-            ],
-            "taken": false
+            "id": "20",
+            "name": "CS M152A",
+            "val": {
+                "type": "required",
+                "description": "what is this",
+                "taken": false
+            }
         },
         {
-            "id": 21,
-            "title": "CS M151B",
-            "type": "required",
-            "description": "what is this as well",
-            "to": [
-                22,
-                23
-            ],
-            "taken": false
+            "id": "21",
+            "name": "CS M151B",
+            "val": {
+                "type": "required",
+                "description": "what is this as well",
+                "taken": false
+            }
         },
         {
-            "id": 22,
-            "title": "CS 152B",
-            "type": "cseonly",
-            "description": "I also don't know what this is",
-            "to": [],
-            "taken": false
+            "id": "22",
+            "name": "CS 152B",
+            "val": {
+                "type": "cseonly",
+                "description": "I also don't know what this is",
+                "taken": false
+            }
         },
         {
-            "id": 23,
-            "title": "CS 133",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "23",
+            "name": "CS 133",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 24,
-            "title": "CS 112",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "24",
+            "name": "CS 112",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 25,
-            "title": "CS 143",
-            "type": "elective",
-            "description": "idk",
-            "to": [
-                26
-            ],
-            "taken": false
+            "id": "25",
+            "name": "CS 143",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 26,
-            "title": "CS 144",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "26",
+            "name": "CS 144",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 27,
-            "title": "CS 136",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "27",
+            "name": "CS 136",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 28,
-            "title": "CS M119",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "28",
+            "name": "CS M119",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 29,
-            "title": "CS M146",
-            "type": "elective",
-            "description": "Be accurate but not too accurate",
-            "to": [],
-            "taken": true
+            "id": "29",
+            "name": "CS M146",
+            "val": {
+                "type": "elective",
+                "description": "Be accurate but not too accurate",
+                "taken": true
+            }
         },
         {
-            "id": 30,
-            "title": "CS 132",
-            "type": "elective",
-            "description": "Optimizing my code for me",
-            "to": [],
-            "taken": false
+            "id": "30",
+            "name": "CS 132",
+            "val": {
+                "type": "elective",
+                "description": "Optimizing my code for me",
+                "taken": false
+            }
         },
         {
-            "id": 31,
-            "title": "CS 170A",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "31",
+            "name": "CS 170A",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 32,
-            "title": "CS 161",
-            "type": "elective",
-            "description": "((((((((((Lisp))))))))))",
-            "to": [],
-            "taken": true
+            "id": "32",
+            "name": "CS 161",
+            "val": {
+                "type": "elective",
+                "description": "((((((((((Lisp))))))))))",
+                "taken": true
+            }
         },
         {
-            "id": 33,
-            "title": "CS 145",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "33",
+            "name": "CS 145",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 34,
-            "title": "CS 183",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "34",
+            "name": "CS 183",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 35,
-            "title": "CS 174B",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "35",
+            "name": "CS 174B",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 36,
-            "title": "CS C174C",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "36",
+            "name": "CS C174C",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 37,
-            "title": "CS M184",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "37",
+            "name": "CS M184",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 38,
-            "title": "CS CM121",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "38",
+            "name": "CS CM121",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 39,
-            "title": "CS CM122",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "39",
+            "name": "CS CM122",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 40,
-            "title": "CS CM124",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "40",
+            "name": "CS CM124",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 41,
-            "title": "CS 168",
-            "type": "elective",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "41",
+            "name": "CS 168",
+            "val": {
+                "type": "elective",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 42,
-            "title": "CS 174A",
-            "type": "elective",
-            "description": "RTX On",
-            "to": [
-                35,
-                36
-            ],
-            "taken": false
+            "id": "42",
+            "name": "CS 174A",
+            "val": {
+                "type": "elective",
+                "description": "RTX On",
+                "taken": false
+            }
         },
         {
-            "id": 43,
-            "title": "CS 172",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "43",
+            "name": "CS 172",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 44,
-            "title": "CS C137A",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [
-                45
-            ],
-            "taken": false
+            "id": "44",
+            "name": "CS C137A",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 45,
-            "title": "CS C137B",
-            "type": "notoffered",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "45",
+            "name": "CS C137B",
+            "val": {
+                "type": "notoffered",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 46,
-            "title": "ECE 3",
-            "type": "cseonly",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "46",
+            "name": "ECE 3",
+            "val": {
+                "type": "cseonly",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 47,
-            "title": "ECE 100",
-            "type": "cseonly",
-            "description": "idk",
-            "to": [
-                48
-            ],
-            "taken": false
+            "id": "47",
+            "name": "ECE 100",
+            "val": {
+                "type": "cseonly",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 48,
-            "title": "ECE 115C",
-            "type": "cseonly",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "48",
+            "name": "ECE 115C",
+            "val": {
+                "type": "cseonly",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 49,
-            "title": "ECE 102",
-            "type": "cseonly",
-            "description": "idk",
-            "to": [],
-            "taken": false
+            "id": "49",
+            "name": "ECE 102",
+            "val": {
+                "type": "cseonly",
+                "description": "idk",
+                "taken": false
+            }
         },
         {
-            "id": 50,
-            "title": "CS30",
-            "type": "optional",
-            "description": "Baby Steps",
-            "to": [
-                2
-            ],
-            "taken": false
+            "id": "50",
+            "name": "CS30",
+            "val": {
+                "type": "optional",
+                "description": "Baby Steps",
+                "taken": false
+            }
+        }
+    ],
+    "links": [
+        {
+            "source": "2",
+            "target": "3"
+        },
+        {
+            "source": "2",
+            "target": "5"
+        },
+        {
+            "source": "2",
+            "target": "37"
+        },
+        {
+            "source": "3",
+            "target": "4"
+        },
+        {
+            "source": "3",
+            "target": "5"
+        },
+        {
+            "source": "3",
+            "target": "9"
+        },
+        {
+            "source": "3",
+            "target": "38"
+        },
+        {
+            "source": "3",
+            "target": "39"
+        },
+        {
+            "source": "3",
+            "target": "40"
+        },
+        {
+            "source": "3",
+            "target": "41"
+        },
+        {
+            "source": "3",
+            "target": "42"
+        },
+        {
+            "source": "3",
+            "target": "43"
+        },
+        {
+            "source": "4",
+            "target": "21"
+        },
+        {
+            "source": "4",
+            "target": "6"
+        },
+        {
+            "source": "4",
+            "target": "7"
+        },
+        {
+            "source": "4",
+            "target": "28"
+        },
+        {
+            "source": "4",
+            "target": "29"
+        },
+        {
+            "source": "5",
+            "target": "6"
+        },
+        {
+            "source": "5",
+            "target": "7"
+        },
+        {
+            "source": "6",
+            "target": "24"
+        },
+        {
+            "source": "6",
+            "target": "25"
+        },
+        {
+            "source": "6",
+            "target": "11"
+        },
+        {
+            "source": "6",
+            "target": "12"
+        },
+        {
+            "source": "7",
+            "target": "12"
+        },
+        {
+            "source": "7",
+            "target": "30"
+        },
+        {
+            "source": "7",
+            "target": "44"
+        },
+        {
+            "source": "8",
+            "target": "9"
+        },
+        {
+            "source": "9",
+            "target": "10"
+        },
+        {
+            "source": "9",
+            "target": "31"
+        },
+        {
+            "source": "9",
+            "target": "32"
+        },
+        {
+            "source": "9",
+            "target": "33"
+        },
+        {
+            "source": "9",
+            "target": "34"
+        },
+        {
+            "source": "11",
+            "target": "27"
+        },
+        {
+            "source": "13",
+            "target": "47"
+        },
+        {
+            "source": "14",
+            "target": "47"
+        },
+        {
+            "source": "14",
+            "target": "49"
+        },
+        {
+            "source": "15",
+            "target": "47"
+        },
+        {
+            "source": "15",
+            "target": "31"
+        },
+        {
+            "source": "17",
+            "target": "38"
+        },
+        {
+            "source": "17",
+            "target": "39"
+        },
+        {
+            "source": "17",
+            "target": "40"
+        },
+        {
+            "source": "17",
+            "target": "41"
+        },
+        {
+            "source": "17",
+            "target": "29"
+        },
+        {
+            "source": "17",
+            "target": "24"
+        },
+        {
+            "source": "18",
+            "target": "22"
+        },
+        {
+            "source": "18",
+            "target": "12"
+        },
+        {
+            "source": "19",
+            "target": "48"
+        },
+        {
+            "source": "19",
+            "target": "20"
+        },
+        {
+            "source": "19",
+            "target": "21"
+        },
+        {
+            "source": "20",
+            "target": "21"
+        },
+        {
+            "source": "21",
+            "target": "22"
+        },
+        {
+            "source": "21",
+            "target": "23"
+        },
+        {
+            "source": "25",
+            "target": "26"
+        },
+        {
+            "source": "42",
+            "target": "35"
+        },
+        {
+            "source": "42",
+            "target": "36"
+        },
+        {
+            "source": "44",
+            "target": "45"
+        },
+        {
+            "source": "47",
+            "target": "48"
+        },
+        {
+            "source": "50",
+            "target": "2"
         }
     ]
 }

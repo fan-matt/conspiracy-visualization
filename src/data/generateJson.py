@@ -6,46 +6,59 @@ JSONFILE = 'data.json'
 with open(FILENAME) as f:
     fileLines = f.read().splitlines()
 
-objectArray = []
 
-objectDict = {}
+nodes = []
+links = []
+
+# useful for EOF
+lineCounter = 0
+
+nodeDict = {}
+nodeValDict = {}
+
+currentId = ''
 
 for line in fileLines:
+    
+    # ignore empty lines
     if line != '':
         splitLine = line.split(':')
         tag = splitLine[0]
         payload = splitLine[1]
 
-        
 
         if tag == 'id':
-            objectDict[tag] = int(payload)
+            nodeDict['id'] = payload
+            currentId = payload
         
-        elif tag == 'title' or tag == 'type' or tag == 'description':
-            objectDict[tag] = payload
+        elif tag == 'title':
+            nodeDict['name'] = payload
+        
+        elif tag == 'type':
+            nodeValDict['type'] = payload
+        
+        elif tag == 'description':
+            nodeValDict['description'] = payload
         
         elif tag == 'to':
-            toList = payload.split(';')
+            if payload != '':
+                toList = payload.split(';')
 
-            if toList == ['']:
-                toList = []
-
-            toList = list(map(int , toList))
-            
-            objectDict[tag] = toList
-
-        elif tag == 'taken':
-            objectDict[tag] = bool(int(payload))
+                for link in toList:
+                    linkDict = {}
+                    linkDict['source'] = currentId
+                    linkDict['target'] = link
+                    links.append(linkDict)
         
-        else:
-            continue
-    
-    else:
-        objectArray.append(objectDict)
-        objectDict = {}
+        elif tag == 'taken':
+            nodeValDict['taken'] = bool(int(payload))
+
+            nodeDict['val'] = nodeValDict
+            nodes.append(nodeDict)
+            nodeDict = {}
+            nodeValDict = {}
 
 
-# to JSON
-jsonDict = {'data': objectArray}
+jsonDict = {'nodes': nodes , 'links': links}
 with open(JSONFILE , 'w') as f:
     json.dump(jsonDict , f , indent=4)
