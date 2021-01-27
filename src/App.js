@@ -1,25 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import React , {useState , useEffect} from 'react';
+
+import MainLayout from './layouts/MainLayout';
+import GraphViewer from './components/GraphViewer';
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    let [graphWidth , setGraphWidth] = useState(window.innerWidth / 2);
+    let [graphHeight , setGraphHeight] = useState(window.innerHeight - 100);
+
+
+    useEffect(() => {
+        window.addEventListener('resize' ,  setDim);
+
+        return () => {
+            window.removeEventListener('resize' , setDim);
+        }
+    });
+
+    function setDim() {
+        setGraphWidth(window.innerWidth / 2)
+        setGraphHeight(window.innerHeight - 100)
+    }
+
+    return (
+        <div className="App">
+            <MainLayout>
+                <GraphViewer width={graphWidth} height={graphHeight} />
+            </MainLayout>
+        </div>
+    );
 }
 
 export default App;
