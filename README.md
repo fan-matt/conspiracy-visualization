@@ -1,3 +1,30 @@
+#Graph Demo
+
+This is a small prototype of a graph explorer that will eventually see itself absorbed into a bigger project.
+
+Live deploy: https://epic-aryabhata-564a17.netlify.app/
+
+Data set: https://www.seasoasa.ucla.edu/wp-content/uploads/seasoasa/2020-21-CS_CSE-Req.pdf
+
+This application was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+Uses:
+
+[Styled Components](https://styled-components.com/)
+[react-force-graph](https://github.com/vasturiano/react-force-graph)
+
+
+To run on your local machine, 
+
+`npm install`
+`npm start`
+
+Developed on my machine with Node 14.5.0
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
