@@ -50,7 +50,7 @@ taken:1
 id:8
 title:Math 61
 type:required
-description:Euler cycle Pog
+description:The seven bridges of Koenigsberg do not form an Euler Cycle
 to:9
 taken:1
 

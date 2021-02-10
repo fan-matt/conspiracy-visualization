@@ -3,443 +3,345 @@
         {
             "id": "1",
             "name": "CS 1",
-            "val": {
-                "type": "required",
-                "description": "Useless",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Useless",
+            "taken": true
         },
         {
             "id": "2",
             "name": "CS 31",
-            "val": {
-                "type": "required",
-                "description": "Smallberg Pog",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Smallberg Pog",
+            "taken": true
         },
         {
             "id": "3",
             "name": "CS 32",
-            "val": {
-                "type": "required",
-                "description": "Suffer",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Suffer",
+            "taken": true
         },
         {
             "id": "4",
             "name": "CS 33",
-            "val": {
-                "type": "required",
-                "description": "Pain in my big endian",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Pain in my big endian",
+            "taken": true
         },
         {
             "id": "5",
             "name": "CS 35L",
-            "val": {
-                "type": "required",
-                "description": "Truer Suffer",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Truer Suffer",
+            "taken": true
         },
         {
             "id": "6",
             "name": "CS 111",
-            "val": {
-                "type": "required",
-                "description": "Truest Suffer",
-                "taken": false
-            }
+            "type": "required",
+            "description": "Truest Suffer",
+            "taken": false
         },
         {
             "id": "7",
             "name": "CS 131",
-            "val": {
-                "type": "required",
-                "description": "OCaml is F tier, complete trash",
-                "taken": true
-            }
+            "type": "required",
+            "description": "OCaml is F tier, complete trash",
+            "taken": true
         },
         {
             "id": "8",
             "name": "Math 61",
-            "val": {
-                "type": "required",
-                "description": "Euler cycle Pog",
-                "taken": true
-            }
+            "type": "required",
+            "description": "The seven bridges of Koenigsberg do not form an Euler Cycle",
+            "taken": true
         },
         {
             "id": "9",
             "name": "CS 180",
-            "val": {
-                "type": "required",
-                "description": "Truester Suffer, none makes me suffer more",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Truester Suffer, none makes me suffer more",
+            "taken": true
         },
         {
             "id": "10",
             "name": "CS 181",
-            "val": {
-                "type": "required",
-                "description": "Minecraft is Turing Complete",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Minecraft is Turing Complete",
+            "taken": true
         },
         {
             "id": "11",
             "name": "CS 118",
-            "val": {
-                "type": "required",
-                "description": "Computer Networks",
-                "taken": false
-            }
+            "type": "required",
+            "description": "Computer Networks",
+            "taken": false
         },
         {
             "id": "12",
             "name": "CS 130",
-            "val": {
-                "type": "capstone",
-                "description": "Software Engineering",
-                "taken": false
-            }
+            "type": "capstone",
+            "description": "Software Engineering",
+            "taken": false
         },
         {
             "id": "13",
             "name": "Phys 1C",
-            "val": {
-                "type": "required",
-                "description": "Laplace Pog",
-                "taken": false
-            }
+            "type": "required",
+            "description": "Laplace Pog",
+            "taken": false
         },
         {
             "id": "14",
             "name": "Math 33A",
-            "val": {
-                "type": "required",
-                "description": "Feeling lost? Consult your identity matrix.",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Feeling lost? Consult your identity matrix.",
+            "taken": true
         },
         {
             "id": "15",
             "name": "Math 33B",
-            "val": {
-                "type": "required",
-                "description": "sin(x)=x",
-                "taken": true
-            }
+            "type": "required",
+            "description": "sin(x)=x",
+            "taken": true
         },
         {
             "id": "17",
             "name": "Math 170A",
-            "val": {
-                "type": "required",
-                "description": "Infinite Improbability Drive",
-                "taken": true
-            }
+            "type": "required",
+            "description": "Infinite Improbability Drive",
+            "taken": true
         },
         {
             "id": "18",
             "name": "Ethics",
-            "val": {
-                "type": "required",
-                "description": "If only everyone followed them more",
-                "taken": false
-            }
+            "type": "required",
+            "description": "If only everyone followed them more",
+            "taken": false
         },
         {
             "id": "19",
             "name": "CS M51A",
-            "val": {
-                "type": "required",
-                "description": "K-map go brrrrrr",
-                "taken": true
-            }
+            "type": "required",
+            "description": "K-map go brrrrrr",
+            "taken": true
         },
         {
             "id": "20",
             "name": "CS M152A",
-            "val": {
-                "type": "required",
-                "description": "what is this",
-                "taken": false
-            }
+            "type": "required",
+            "description": "what is this",
+            "taken": false
         },
         {
             "id": "21",
             "name": "CS M151B",
-            "val": {
-                "type": "required",
-                "description": "what is this as well",
-                "taken": false
-            }
+            "type": "required",
+            "description": "what is this as well",
+            "taken": false
         },
         {
             "id": "22",
             "name": "CS 152B",
-            "val": {
-                "type": "cseonly",
-                "description": "I also don't know what this is",
-                "taken": false
-            }
+            "type": "cseonly",
+            "description": "I also don't know what this is",
+            "taken": false
         },
         {
             "id": "23",
             "name": "CS 133",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "24",
             "name": "CS 112",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "25",
             "name": "CS 143",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "26",
             "name": "CS 144",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "27",
             "name": "CS 136",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "28",
             "name": "CS M119",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "29",
             "name": "CS M146",
-            "val": {
-                "type": "elective",
-                "description": "Be accurate but not too accurate",
-                "taken": true
-            }
+            "type": "elective",
+            "description": "Be accurate but not too accurate",
+            "taken": true
         },
         {
             "id": "30",
             "name": "CS 132",
-            "val": {
-                "type": "elective",
-                "description": "Optimizing my code for me",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "Optimizing my code for me",
+            "taken": false
         },
         {
             "id": "31",
             "name": "CS 170A",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "32",
             "name": "CS 161",
-            "val": {
-                "type": "elective",
-                "description": "((((((((((Lisp))))))))))",
-                "taken": true
-            }
+            "type": "elective",
+            "description": "((((((((((Lisp))))))))))",
+            "taken": true
         },
         {
             "id": "33",
             "name": "CS 145",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "34",
             "name": "CS 183",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "35",
             "name": "CS 174B",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "36",
             "name": "CS C174C",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "37",
             "name": "CS M184",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "38",
             "name": "CS CM121",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "39",
             "name": "CS CM122",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "40",
             "name": "CS CM124",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "41",
             "name": "CS 168",
-            "val": {
-                "type": "elective",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "42",
             "name": "CS 174A",
-            "val": {
-                "type": "elective",
-                "description": "RTX On",
-                "taken": false
-            }
+            "type": "elective",
+            "description": "RTX On",
+            "taken": false
         },
         {
             "id": "43",
             "name": "CS 172",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "44",
             "name": "CS C137A",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "45",
             "name": "CS C137B",
-            "val": {
-                "type": "notoffered",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "notoffered",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "46",
             "name": "ECE 3",
-            "val": {
-                "type": "cseonly",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "cseonly",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "47",
             "name": "ECE 100",
-            "val": {
-                "type": "cseonly",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "cseonly",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "48",
             "name": "ECE 115C",
-            "val": {
-                "type": "cseonly",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "cseonly",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "49",
             "name": "ECE 102",
-            "val": {
-                "type": "cseonly",
-                "description": "idk",
-                "taken": false
-            }
+            "type": "cseonly",
+            "description": "idk",
+            "taken": false
         },
         {
             "id": "50",
             "name": "CS30",
-            "val": {
-                "type": "optional",
-                "description": "Baby Steps",
-                "taken": false
-            }
+            "type": "optional",
+            "description": "Baby Steps",
+            "taken": false
         }
     ],
     "links": [
