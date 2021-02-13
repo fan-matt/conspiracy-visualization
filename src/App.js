@@ -58,12 +58,6 @@ function App() {
     });
 
 
-    function setDim() {
-        setGraphWidth(window.innerWidth / 2)
-        setGraphHeight(window.innerHeight - 100)
-    }
-
-
     function onWindowResize() {
         // Proportional size after resize 
         setGraphWidth(graphWidth / splitWidth * window.innerWidth);
@@ -169,7 +163,7 @@ function App() {
                         onNodeClick={onNodeClick}
                     />
                     <MenuAndFooter>
-                        <SwitchMenu pages={pages}>
+                        <SwitchMenu pages={pages} pageIndex={0}>
 
                         </SwitchMenu>       
 

@@ -1,4 +1,4 @@
-import React , { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 
@@ -24,16 +24,13 @@ let StyledMenuBar = styled.div`
 
 
 export default function SwitchMenu(props) {
-    const [pageIndex , setPageIndex] = useState(0);
-
-
     return (
         <StyledSwitchMenu className={props.className}>
             <StyledMenuBar>
-
+                {/* pageIndex button */}
             </StyledMenuBar>
 
-            {props.pages[0]}
+            {props.pages[props.pageIndex]}
         </StyledSwitchMenu>
     );
 }
