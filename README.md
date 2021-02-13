@@ -1,3 +1,9 @@
+# Demo Branch
+Live deploy: https://compassionate-ritchie-619319.netlify.app/
+This is a work in progress! The deployment may occasionally break or not reflect the current code.
+
+
+
 # Graph Demo
 
 This is a small prototype of a graph explorer that will eventually see itself absorbed into a bigger project.
