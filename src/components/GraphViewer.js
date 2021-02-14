@@ -1,6 +1,8 @@
 import React , {useEffect , useRef} from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 
+import { mapNodeTypeToColor } from './../util/DataConsts';
+
 
 /**
  * This component serves more as a wrapper for the ForceGraph2D- it hides away a lot of the nitty gritty details
@@ -52,28 +54,7 @@ function GraphViewer(props) {
 
 
     function handleNodeColor(node) {
-        switch(node.type) {
-            case 'required':
-                return 'green';
-            
-            case 'cseonly':
-                return 'lightcoral';
-            
-            case 'notoffered':
-                return 'gray';
-            
-            case 'elective':
-                return 'white';
-
-            case 'capstone':
-                return 'aqua';
-
-            case 'optional':
-                return 'lawngreen';
-            
-            default:
-                return 'black';
-        }
+        return mapNodeTypeToColor(node.type);
     }
 
 
