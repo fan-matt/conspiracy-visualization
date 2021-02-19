@@ -35,7 +35,7 @@ function App() {
     let [graphHeight , setGraphHeight]                  = useState(window.innerHeight - 100);
     let [currentNode , setCurrentNode]                  = useState(null);
     let [currentPageIndex , setCurrentPageIndex]        = useState(0);
-
+    let [data , setData]                                = useState({nodes:[] , links:[]});
 
     useEffect(() => {
         window.addEventListener('resize' ,  onWindowResize);
@@ -45,12 +45,14 @@ function App() {
         }
     });
 
-
-    /*
-        Replace this later with a real data loader, once we have real data
-    */
-    let dataLoader = new DataLoader();
-    dataLoader.load(Data);
+    useEffect(() => {
+        /*
+            Replace this later with a real data loader, once we have real data
+        */
+        let dataLoader = new DataLoader();
+        dataLoader.load(Data);
+        setData(dataLoader.getData())
+    } , [])
 
 
     /*
@@ -86,7 +88,7 @@ function App() {
     function onPageChange(newIndex) {
         setCurrentPageIndex(newIndex)
     }
-
+    
 
     return (
         <div className="App">
@@ -95,7 +97,7 @@ function App() {
                     <GraphViewer 
                         width={graphWidth}
                         height={graphHeight}
-                        data={dataLoader.getData()}
+                        data={data}
                         onNodeClick={onNodeClick}
                     />
                     

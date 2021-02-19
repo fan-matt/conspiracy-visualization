@@ -11,6 +11,11 @@ export const NODE_TYPE_ELECTIVE                 = 'elective';
 export const NODE_TYPE_CAPSTONE                 = 'capstone';
 export const NODE_TYPE_OPTIONAL                 = 'optional';
 
+export const LINK_COLOR                         = 'rgba(255,255,255,0.2)';
+export const NODE_HIGHLIGHT_HOVER               = 'white';
+export const NODE_HIGHLIGHT_ADJACENT            = 'cyan';
+
+export const GRAPH_BACKGROUND_COLOR             = '#232834';
 
 export function mapNodeTypeToText(type) {
     switch(type) {
@@ -44,19 +49,19 @@ export function mapNodeTypeToColor(type) {
             return 'green';
         
         case NODE_TYPE_CSE_ONLY:
-            return 'lightcoral';
+            return 'FireBrick';
         
         case NODE_TYPE_NOT_OFFERED:
             return 'gray';
         
         case NODE_TYPE_ELECTIVE:
-            return 'white';
+            return 'orange';
         
         case NODE_TYPE_CAPSTONE:
-            return 'aqua';
+            return 'teal';
 
         case NODE_TYPE_OPTIONAL:
-            return 'lawngreen';
+            return '#594bb0';
         
         default:
             return 'black';

@@ -1,7 +1,13 @@
-import React , {useEffect , useRef} from 'react';
+import React , {useState , useEffect , useRef} from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 
-import { mapNodeTypeToColor } from './../util/DataConsts';
+import { 
+    mapNodeTypeToColor ,
+    LINK_COLOR , 
+    NODE_HIGHLIGHT_HOVER , 
+    NODE_HIGHLIGHT_ADJACENT , 
+    GRAPH_BACKGROUND_COLOR 
+    } from './../util/DataConsts';
 
 
 /**
@@ -11,8 +17,12 @@ import { mapNodeTypeToColor } from './../util/DataConsts';
  * @param {*} props React props
  */
 function GraphViewer(props) {
-    const graphRef = useRef(null);
+    let [hoveredNode , setHoveredNode]              = useState(null);
+    let [highlightNodes , setHighlightNodes]        = useState([]);
+    let [highlightLinks , setHighlightLinks]        = useState([]);
 
+
+    const graphRef = useRef(null);
 
     // This runs exactly once after rendering for the first time
     useEffect(() => {
@@ -58,6 +68,44 @@ function GraphViewer(props) {
     }
 
 
+    function handleNodeHover(node) {
+        if(node) {
+            let highlighted = node.neighbors.slice();
+            highlighted.push(node);
+
+            setHighlightNodes(highlighted);
+            setHighlightLinks(node.links);
+            setHoveredNode(node);
+        }
+        else {
+            setHighlightLinks([]);
+            setHighlightNodes([]);
+            setHoveredNode(null);
+        }
+    }
+
+
+    function handleLinkHover(link) {
+        if(link) {
+            setHighlightLinks([link]);
+            setHighlightNodes([link.source , link.target]);
+        }
+        else {
+            setHighlightLinks([]);
+            setHighlightNodes([]);
+        }
+    }
+
+
+    function paintNode(node , ctx) {
+        // add ring just for highlighted nodes
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 8 * 1.4, 0, 2 * Math.PI, false);
+        ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
+        ctx.fill();
+    }
+
+
     function deactivateForces() {
         graphRef.current.d3Force('center' , null);
         graphRef.current.d3Force('charge' , null);
@@ -65,7 +113,7 @@ function GraphViewer(props) {
     }
 
 
-    function handleBackgroundClick(event) {
+    function handleBackgroundClick() {
         graphRef.current.zoomToFit(500 , 50);
         props.onNodeClick(null);
     }
@@ -75,19 +123,27 @@ function GraphViewer(props) {
         <div className={props.className} width={props.width} height={props.height} style={{overflow: 'hidden'}}>
             <ForceGraph2D 
                 ref={graphRef}
-                backgroundColor='#232834'
+                backgroundColor={GRAPH_BACKGROUND_COLOR}
 
                 width={props.width}
                 height={props.height}
                 graphData={props.data}
 
                 onNodeClick={handleNodeClick}
+                onNodeHover={handleNodeHover}
                 onNodeDragEnd={handleNodeDragEnd}
                 nodeColor={handleNodeColor}
                 nodeRelSize={8}
+                nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
+                nodeCanvasObject={paintNode}
 
-                linkDirectionalArrowLength={5}
-                linkColor={() => 'rgba(255,255,255,0.2)'}
+                onLinkHover={handleLinkHover}
+                linkDirectionalArrowLength={link => highlightLinks.includes(link) ? 0 : 5}
+                linkDirectionalParticles={4}
+                linkDirectionalParticleSpeed={0.005}
+                linkDirectionalParticleWidth={link => highlightLinks.includes(link) ? 4 : 0}
+                linkColor={() => LINK_COLOR}
+                linkWidth={link => highlightLinks.includes(link) ? 5 : 1}
 
                 onBackgroundClick={handleBackgroundClick}
 
