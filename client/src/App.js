@@ -52,6 +52,14 @@ function App() {
         let dataLoader = new DataLoader();
         dataLoader.load(Data);
         setData(dataLoader.getData())
+
+        fetch('/api/helloworld')
+        .then(res => res.text())
+        .then(text => console.log(text));
+
+        fetch('/api/test/myId')
+        .then(res => res.text())
+        .then(text => console.log(text));
     } , [])
 
 
