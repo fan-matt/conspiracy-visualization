@@ -17,9 +17,10 @@ import {
  * @param {*} props React props
  */
 function GraphViewer(props) {
-    let [hoveredNode , setHoveredNode]              = useState(null);
-    let [highlightNodes , setHighlightNodes]        = useState([]);
-    let [highlightLinks , setHighlightLinks]        = useState([]);
+    let [hoveredNode , setHoveredNode]                  = useState(null);
+    let [highlightNodes , setHighlightNodes]            = useState([]);
+    let [highlightLinks , setHighlightLinks]            = useState([]);
+    let [isNodeLinkHovering , setIsNodeLinkHovering]    = useState(false);
 
 
     const graphRef = useRef(null);
@@ -41,8 +42,15 @@ function GraphViewer(props) {
             return 0.1 * defaultForce;
         });
         graphRef.current.d3Force('link' , linkForce);
-
       }, []);
+
+
+      useEffect(() => {
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        }
+      });
+
 
     
     function handleNodeClick(node , e) {
@@ -68,7 +76,13 @@ function GraphViewer(props) {
     }
 
 
-    function handleNodeHover(node) {
+    /*
+        Highlights node, adjacent nodes, and adjacent edges if
+        node !== null
+
+        otherwise, unhighlights everything
+    */
+    function highlightNodeNeighbors(node) {
         if(node) {
             let highlighted = node.neighbors.slice();
             highlighted.push(node);
@@ -85,7 +99,12 @@ function GraphViewer(props) {
     }
 
 
-    function handleLinkHover(link) {
+    /*
+        Highlights link and adjacent nodes if link !== null
+
+        otherwise, unhighlights everything
+    */
+    function highlightLinkNeighbors(link) {
         if(link) {
             setHighlightLinks([link]);
             setHighlightNodes([link.source , link.target]);
@@ -94,6 +113,19 @@ function GraphViewer(props) {
             setHighlightLinks([]);
             setHighlightNodes([]);
         }
+    }
+
+
+
+    function handleNodeHover(node) {
+        highlightNodeNeighbors(node);
+        setIsNodeLinkHovering(node === null);
+    }
+
+
+    function handleLinkHover(link) {
+        highlightLinkNeighbors(link);
+        setIsNodeLinkHovering(link === null);
     }
 
 
