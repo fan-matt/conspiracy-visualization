@@ -53,11 +53,11 @@ function App() {
         dataLoader.load(Data);
         setData(dataLoader.getData())
 
-        fetch('/api/helloworld')
+        fetch('/conspiracy-new/api/helloworld')
         .then(res => res.text())
         .then(text => console.log(text));
 
-        fetch('/api/test/myId')
+        fetch('/conspiracy-new/api/test/myId')
         .then(res => res.text())
         .then(text => console.log(text));
     } , [])
@@ -107,6 +107,7 @@ function App() {
                         height={graphHeight}
                         data={data}
                         onNodeClick={onNodeClick}
+                        currentNode={currentNode}
                     />
                     
                     <MenuAndFooter>
