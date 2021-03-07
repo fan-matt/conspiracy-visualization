@@ -14,7 +14,6 @@ links = []
 lineCounter = 0
 
 nodeDict = {}
-nodeValDict = {}
 
 currentId = ''
 
@@ -35,10 +34,10 @@ for line in fileLines:
             nodeDict['name'] = payload
         
         elif tag == 'type':
-            nodeValDict['type'] = payload
+            nodeDict['type'] = payload
         
         elif tag == 'description':
-            nodeValDict['description'] = payload
+            nodeDict['description'] = payload
         
         elif tag == 'to':
             if payload != '':
@@ -51,12 +50,9 @@ for line in fileLines:
                     links.append(linkDict)
         
         elif tag == 'taken':
-            nodeValDict['taken'] = bool(int(payload))
-
-            nodeDict['val'] = nodeValDict
+            nodeDict['taken'] = bool(int(payload))
             nodes.append(nodeDict)
             nodeDict = {}
-            nodeValDict = {}
 
 
 jsonDict = {'nodes': nodes , 'links': links}
