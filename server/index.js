@@ -25,30 +25,54 @@ app.get('/api/test/:id' , (req , res) => {
 
 //search for a particular node
 app.get('/api/query/nodeSearch', (req, res)=>{
-	connection.query("SELECT * FROM Nodes WHERE node LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
+	connection.query("SELECT * FROM nodes WHERE node LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
 		res.json(result);
 	});
 });
 //search for a particular relationship
 app.get('/api/query/relationSearch', (req, res)=>{
-	connection.query("SELECT * FROM Relationships WHERE relation LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
+	connection.query("SELECT * FROM relationships WHERE relation LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
 		res.json(result);
 	});
 });
 
 //search for all outgoing edges
 app.get('/api/query/outgoing', (req,res)=>{
-	connection.query("SELECT * FROM Nodes WHERE node IN (SELECT obj2 FROM Relationships WHERE obj1='"+ req.query.node +"')",(err,result,fields)=>{
+	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj2 FROM relationships WHERE obj1='"+ req.query.node +"')",(err,result,fields)=>{
 		res.json(result);
 	});
 });
 
 //search for all incoming edges
 app.get('/api/query/incoming', (req,res)=>{
-	connection.query("SELECT * FROM Nodes WHERE node IN (SELECT obj1 FROM Relationships WHERE obj2='"+ req.query.node +"')",(err,result,fields)=>{
+	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj1 FROM relationships WHERE obj2='"+ req.query.node +"')",(err,result,fields)=>{
 		res.json(result);
 	});
 });
+
+//search for all incoming edges
+app.get('/api/query/incoming', (req,res)=>{
+	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj1 FROM relationships WHERE obj2='"+ req.query.node +"')",(err,result,fields)=>{
+		res.json(result);
+	});
+});
+
+//search for all nodes with certain graph_id
+app.get('/api/query/nodes_graph_id', (req,res)=>{
+	console.log("SELECT * FROM nodes WHERE graph_id =" + req.query.graphId);
+	connection.query("SELECT * FROM nodes WHERE graph_id =" + req.query.graphId,(err,result,fields)=>{
+		res.json(result);
+	});
+});
+
+//search for all relationships with certain graph_id
+app.get('/api/query/relationships_graph_id', (req,res)=>{
+	console.log("SELECT * FROM relationships WHERE graph_id =" + req.query.graphId);
+	connection.query("SELECT * FROM relationships WHERE graph_id =" + req.query.graphId,(err,result,fields)=>{
+		res.json(result);
+	});
+});
+
 
 
 
