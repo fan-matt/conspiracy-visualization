@@ -23,6 +23,45 @@ app.get('/api/test/:id' , (req , res) => {
     res.send(`Request for id ${req.params.id}`);
 });
 
+
+
+app.get('/api/graphDates' , (req , res) => {
+	/*
+		Get every possible graph date, return array
+	*/
+});
+
+
+app.get('/api/graph([\?]){0,}' , (req , res) => {
+	/*
+		Get entire graph given date, return JSON:
+
+		{
+			nodes: [
+				{
+					id: 'id1' ,
+					...
+				}
+			] ,
+			links: [
+				{
+					source: 'id1' ,
+					target: 'id2' ,
+					...
+				} ,
+				...
+			]
+		}
+
+		Find the date here:
+		req.query.date
+	*/
+});
+
+
+
+
+
 //search for a particular node
 app.get('/api/query/nodeSearch', (req, res)=>{
 	connection.query("SELECT * FROM nodes WHERE node LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
