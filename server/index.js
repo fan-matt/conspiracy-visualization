@@ -8,7 +8,8 @@ const connection = mysql.createConnection({
 	host:'127.0.0.1',
 	user:'std2',
 	password: 'pass1234',
-	database:'test'
+	database:'test',
+	multipleStatements : true
 });
 
 
@@ -29,6 +30,15 @@ app.get('/api/graphDates' , (req , res) => {
 	/*
 		Get every possible graph date, return array
 	*/
+	connection.query("SELECT DISTINCT Date FROM nodes", (err,result,fields)=>{
+		var json_object = {};
+		var date = "Date";
+		json_object[date] = [];
+		for(const tuple of result){
+			json_object[date].push(tuple.Date);
+		}
+		res.json(json_object);
+	});
 });
 
 
@@ -56,6 +66,35 @@ app.get('/api/graph([\?]){0,}' , (req , res) => {
 		Find the date here:
 		req.query.date
 	*/
+	var json_object = {};
+	var field1 = "nodes";
+	var field2 = "links";
+	json_object[field1] = [];
+	json_object[field2] = [];
+	var current = new Date(req.query.date);
+	current.setDate(current.getDate() - 1)
+	var next_day = new Date(req.query.date);
+
+	var query = "SELECT * FROM nodes WHERE Date > \"" + current.toISOString() +"\" AND Date <= \"" + next_day.toISOString() + "\"";
+	query += "; SELECT * FROM relationships WHERE Date >= \"" + current.toISOString() +"\" AND Date < \"" + next_day.toISOString() + "\"";
+	console.log(query);
+	connection.query(query, (err, result, fields)=>{
+		console.log(result);
+		for(const tuple of result[0]){
+			console.log(tuple);
+			json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+		}
+		
+		console.log(json_object[field1]);
+		for(const tuple of result[1]){
+			console.log(tuple);
+			json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+		}
+		
+		console.log(json_object[field2]);
+		res.json(json_object);
+	});
+
 });
 
 
