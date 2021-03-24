@@ -7,6 +7,8 @@ import StyledSplitPane from './components/StyledSplitPane';
 import GraphSwitchMenu from './components/GraphSwitchMenu';
 import Footer from './components/Footer';
 
+import { formatDate } from './util/util';
+
 import DataLoader from './util/DataLoader';
 
 import Data from './data/data.json';
@@ -36,6 +38,7 @@ function App() {
     let [currentNode , setCurrentNode]                  = useState(null);
     let [currentPageIndex , setCurrentPageIndex]        = useState(0);
     let [data , setData]                                = useState({nodes:[] , links:[]});
+    const [graphDate , setGraphDate]                    = useState(undefined);
 
     useEffect(() => {
         window.addEventListener('resize' ,  onWindowResize);
@@ -102,6 +105,7 @@ function App() {
                 console.log('FIXED JSON')
                 console.log(graphJson);
                 setData(graphJson);
+                setGraphDate(formatDate(mostRecent));
             })
         });
     } , [])
@@ -144,8 +148,8 @@ function App() {
 
     return (
         <div className="App">
-            <MainLayout>
-                <StyledSplitPane split="vertical" minSize={200} defaultSize={window.innerWidth / 3 * 2} onChange={onSplitResize} size={graphWidth} >
+            <MainLayout date={graphDate}>
+                <StyledSplitPane split="vertical" minSize={200} defaultSize={window.innerWidth / 3 * 2} onChange={onSplitResize} size={graphWidth} pane2Style={{overflowX: 'auto'}} >
                     <GraphViewer 
                         width={graphWidth}
                         height={graphHeight}

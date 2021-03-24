@@ -15,7 +15,7 @@ let Layout = styled.div`
 function MainLayout(props) {
     return(
         <Layout>
-            <Header />
+            <Header date={props.date} />
             {props.children}
         </Layout>
     );

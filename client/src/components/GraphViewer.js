@@ -45,17 +45,17 @@ function GraphViewer(props) {
       }, []);
 
 
-      useEffect(() => {
-        if(props.currentNode) {
-            highlightNodeNeighbors(props.currentNode);
-        }
-      });
+    //   useEffect(() => {
+    //     if(props.currentNode) {
+    //         highlightNodeNeighbors(props.currentNode);
+    //     }
+    //   });
 
 
     
     function handleNodeClick(node , e) {
-        graphRef.current.centerAt(node.x , node.y , 750);
-        graphRef.current.zoom(3 , 750);
+        graphRef.current.centerAt(node.x , node.y , 1000);
+        graphRef.current.zoom(0.75 , 1000);
 
         // Callback
         if(props.onNodeClick) {
@@ -141,14 +141,21 @@ function GraphViewer(props) {
 
 
     function deactivateForces() {
-        graphRef.current.d3Force('center' , null);
-        graphRef.current.d3Force('charge' , null);
-        graphRef.current.d3Force('link' , null);
+        // Don't just set forces to null! This breaks hot reload and maybe other things
+        function zeroForce(forceName) {
+            let force = graphRef.current.d3Force(forceName);
+            force.strength(0);
+            graphRef.current.d3Force(forceName , force);
+        }
+
+        zeroForce('center');
+        zeroForce('charge');
+        zeroForce('link');
     }
 
 
     function handleBackgroundClick() {
-        graphRef.current.zoomToFit(500 , 50);
+        graphRef.current.zoomToFit(750 , 50);
         props.onNodeClick(null);
     }
 
@@ -167,7 +174,6 @@ function GraphViewer(props) {
                 onNodeHover={handleNodeHover}
                 onNodeDragEnd={handleNodeDragEnd}
                 nodeAutoColorBy={(node) => node.community}
-                // nodeColor={handleNodeColor}
                 nodeLabel={(node) => node.node}
                 nodeRelSize={24}
                 nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
@@ -185,7 +191,7 @@ function GraphViewer(props) {
 
                 onBackgroundClick={handleBackgroundClick}
 
-                d3AlphaDecay={0.02}
+                d3AlphaDecay={0.06}
                 d3VelocityDecay={0.1}
                 cooldownTime={2500}
                 onEngineStop={deactivateForces}
