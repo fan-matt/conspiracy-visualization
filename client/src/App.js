@@ -46,20 +46,56 @@ function App() {
     });
 
     useEffect(() => {
-        /*
-            Replace this later with a real data loader, once we have real data
-        */
-        let dataLoader = new DataLoader();
-        dataLoader.load(Data);
-        setData(dataLoader.getData())
-
-        fetch('/conspiracy-new/api/helloworld')
+        fetch('/api/helloworld')
         .then(res => res.text())
         .then(text => console.log(text));
 
-        fetch('/conspiracy-new/api/test/myId')
-        .then(res => res.text())
-        .then(text => console.log(text));
+        fetch('/api/graphDates')
+        .then(res => res.json())
+        .then(dateJson => {
+            let dates = dateJson.Date;
+            let mostRecent = dates[dates.length - 1];
+
+            fetch('/api/graph?' + new URLSearchParams({
+                date: mostRecent
+            }))
+            .then(res => res.json())
+            .then(graphJson => {
+                // Process data
+
+                // Set id field and source/target
+                let nodes = graphJson.nodes;
+                let links = graphJson.links;
+
+                nodes.forEach(node => {
+                    node.id = node.node_id;
+                    delete node.node_id;
+
+                    node.neighbors = [];
+                    node.links = [];
+                });
+
+                links.forEach(link => {
+                    link.id = link.rel_id;
+                    delete link.rel_id;
+
+                    link.source = nodes.find(node => node.graph_id === link.graph_id && node.id === link.obj1);
+                    link.target = nodes.find(node => node.graph_id === link.graph_id && node.id === link.obj2);
+
+                    link.source.neighbors.push(link.target);
+                    link.target.neighbors.push(link.source);
+
+                    link.source.links.push(link);
+                    link.target.links.push(link);
+                });
+
+                // Prune neighborless nodes
+                graphJson.nodes = nodes.filter(node => node.neighbors.length > 0);
+
+                console.log(graphJson);
+                setData(graphJson);
+            })
+        });
     } , [])
 
 

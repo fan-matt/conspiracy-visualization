@@ -29,7 +29,7 @@ function GraphViewer(props) {
     useEffect(() => {
         // Cap the many body (aka charge) force
         // Without this, it reaches too far and starts to push stray nodes very far away
-        const MAX_DIST = 150;
+        const MAX_DIST = 1500;
         let chargeForce = graphRef.current.d3Force('charge');
         chargeForce.distanceMax(MAX_DIST);
         graphRef.current.d3Force('charge' , chargeForce);
@@ -39,7 +39,7 @@ function GraphViewer(props) {
         let strengthAccessor = linkForce.strength();
         linkForce.strength((link) => {
             let defaultForce = strengthAccessor(link);
-            return 0.1 * defaultForce;
+            return 0.025 * defaultForce;
         });
         graphRef.current.d3Force('link' , linkForce);
       }, []);
@@ -61,6 +61,8 @@ function GraphViewer(props) {
         if(props.onNodeClick) {
             props.onNodeClick(node , e);
         }
+
+        console.log(node);
     }
 
 
@@ -132,7 +134,7 @@ function GraphViewer(props) {
     function paintNode(node , ctx) {
         // add ring just for highlighted nodes
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 8 * 1.4, 0, 2 * Math.PI, false);
+        ctx.arc(node.x, node.y, 24 * 1.4, 0, 2 * Math.PI, false);
         ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
         ctx.fill();
     }
@@ -164,8 +166,10 @@ function GraphViewer(props) {
                 onNodeClick={handleNodeClick}
                 onNodeHover={handleNodeHover}
                 onNodeDragEnd={handleNodeDragEnd}
-                nodeColor={handleNodeColor}
-                nodeRelSize={8}
+                nodeAutoColorBy={(node) => node.community}
+                // nodeColor={handleNodeColor}
+                nodeLabel={(node) => node.node}
+                nodeRelSize={24}
                 nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
                 nodeCanvasObject={paintNode}
 
@@ -176,11 +180,12 @@ function GraphViewer(props) {
                 linkDirectionalParticleWidth={link => highlightLinks.includes(link) ? 4 : 0}
                 linkColor={() => LINK_COLOR}
                 linkWidth={link => highlightLinks.includes(link) ? 5 : 1}
+                linkLabel={(link) => `${link.source.node} -> ${link.relation} -> ${link.target.node}`}
 
                 onBackgroundClick={handleBackgroundClick}
 
-                d3AlphaDecay={0.04}
-                d3VelocityDecay={0.2}
+                d3AlphaDecay={0.02}
+                d3VelocityDecay={0.1}
                 cooldownTime={2500}
                 onEngineStop={deactivateForces}
             />

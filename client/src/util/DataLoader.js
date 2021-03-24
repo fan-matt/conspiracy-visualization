@@ -1,4 +1,17 @@
 class DataLoader {
+    async loadDates() {
+        fetch('/api/graphDates')
+        .then(response => response.json())
+        .then(dateJson => dateJson.Date);
+    }
+
+
+    mostRecentDate() {
+        return this.dates[this.dates.length - 1];
+    }
+
+
+
     load(DATA) {
         this.data = DATA;
 
