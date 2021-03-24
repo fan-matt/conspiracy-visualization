@@ -61,6 +61,9 @@ function App() {
             }))
             .then(res => res.json())
             .then(graphJson => {
+                console.log('RAW JSON');
+                console.log(graphJson);
+
                 // Process data
 
                 // Set id field and source/target
@@ -83,15 +86,20 @@ function App() {
                     link.target = nodes.find(node => node.graph_id === link.graph_id && node.id === link.obj2);
 
                     link.source.neighbors.push(link.target);
-                    link.target.neighbors.push(link.source);
-
                     link.source.links.push(link);
-                    link.target.links.push(link);
+                    
+                    if(link.source !== link.target) {
+                        link.target.neighbors.push(link.source);
+                        link.target.links.push(link);
+                    } else {
+                        link.curvature = 3;
+                    }
                 });
 
                 // Prune neighborless nodes
                 graphJson.nodes = nodes.filter(node => node.neighbors.length > 0);
-
+                
+                console.log('FIXED JSON')
                 console.log(graphJson);
                 setData(graphJson);
             })

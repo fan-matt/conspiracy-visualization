@@ -181,6 +181,7 @@ function GraphViewer(props) {
                 linkColor={() => LINK_COLOR}
                 linkWidth={link => highlightLinks.includes(link) ? 5 : 1}
                 linkLabel={(link) => `${link.source.node} -> ${link.relation} -> ${link.target.node}`}
+                linkCurvature="curvature"
 
                 onBackgroundClick={handleBackgroundClick}
 
