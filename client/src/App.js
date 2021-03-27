@@ -49,17 +49,17 @@ function App() {
     });
 
     useEffect(() => {
-        fetch('/api/helloworld')
+        fetch('./api/helloworld')
         .then(res => res.text())
         .then(text => console.log(text));
 
-        fetch('/api/graphDates')
+        fetch('./api/graphDates')
         .then(res => res.json())
         .then(dateJson => {
             let dates = dateJson.Date;
             let mostRecent = dates[dates.length - 1];
 
-            fetch('/api/graph?' + new URLSearchParams({
+            fetch('./api/graph?' + new URLSearchParams({
                 date: mostRecent
             }))
             .then(res => res.json())

@@ -6,9 +6,9 @@ const port  = 5000;
 
 const connection = mysql.createConnection({
 	host:'127.0.0.1',
-	user:'std2',
-	password: 'pass1234',
-	database:'test',
+	user:'elee',
+	password: 'password',
+	database:'MAINDB',
 	multipleStatements : true
 });
 
@@ -18,12 +18,6 @@ app.use(express.static(path.join(__dirname , 'build')));
 app.get('/api/helloworld' , (req , res) => {
     res.send('Hello from the Express Server!');
 });
-
-
-app.get('/api/test/:id' , (req , res) => {
-    res.send(`Request for id ${req.params.id}`);
-});
-
 
 
 app.get('/api/graphDates' , (req , res) => {
@@ -159,9 +153,11 @@ app.get('/' , (req , res) => {
 });
 
 connection.connect((err)=>{
-	if(err)
+	if(err) {
 		console.log("Error");
-	else
+		console.log(err);
+	} else {
 		console.log("Connected to DB!");
+	}
 });
 app.listen(port , () => console.log(`Listening at http://localhost:${port}`));

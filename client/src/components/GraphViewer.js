@@ -213,7 +213,7 @@ function GraphViewer(props) {
 
                 d3AlphaDecay={0.06}
                 d3VelocityDecay={0.1}
-                cooldownTime={2500}
+                cooldownTime={3000}
                 onEngineStop={deactivateForces}
             />
         </div>
