@@ -2,7 +2,6 @@ import React , {useState , useEffect , useRef} from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
 import { 
-    mapNodeTypeToColor ,
     LINK_COLOR , 
     NODE_HIGHLIGHT_HOVER , 
     NODE_HIGHLIGHT_ADJACENT , 
@@ -20,7 +19,6 @@ function GraphViewer(props) {
     let [hoveredNode , setHoveredNode]                  = useState(null);
     let [highlightNodes , setHighlightNodes]            = useState([]);
     let [highlightLinks , setHighlightLinks]            = useState([]);
-    let [isNodeLinkHovering , setIsNodeLinkHovering]    = useState(false);
 
 
     const graphRef = useRef(null);
@@ -45,12 +43,14 @@ function GraphViewer(props) {
       }, []);
 
 
-    //   useEffect(() => {
-    //     if(props.currentNode) {
-    //         highlightNodeNeighbors(props.currentNode);
-    //     }
-    //   });
-
+      useEffect(() => {
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        } else {
+            setHighlightLinks([]);
+            setHighlightNodes([]);
+        }
+      } , [props.currentNode]);
 
     
     function handleNodeClick(node , e) {
@@ -61,8 +61,6 @@ function GraphViewer(props) {
         if(props.onNodeClick) {
             props.onNodeClick(node , e);
         }
-
-        console.log(node);
     }
 
 
@@ -70,11 +68,6 @@ function GraphViewer(props) {
         // Fixes their positions so they don't float around anymore
         node.fx = node.x;
         node.fy = node.y;
-    }
-
-
-    function handleNodeColor(node) {
-        return mapNodeTypeToColor(node.type);
     }
 
 
@@ -120,22 +113,35 @@ function GraphViewer(props) {
 
 
     function handleNodeHover(node) {
-        highlightNodeNeighbors(node);
-        setIsNodeLinkHovering(node === null);
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        } else {
+            highlightNodeNeighbors(node);
+        }
     }
 
 
     function handleLinkHover(link) {
-        highlightLinkNeighbors(link);
-        setIsNodeLinkHovering(link === null);
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        } else {
+            highlightLinkNeighbors(link);
+        }
     }
 
 
-    function paintNode(node , ctx) {
+    function paintNode(node , color , ctx) {
         // add ring just for highlighted nodes
+        if(highlightNodes.includes(node)) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, handleNodeSize(node) * 1.4, 0, 2 * Math.PI, false);
+            ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
+            ctx.fill();
+        }
+
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 24 * 1.4, 0, 2 * Math.PI, false);
-        ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
+        ctx.arc(node.x, node.y, handleNodeSize(node), 0, 2 * Math.PI, false);
+        ctx.fillStyle = (color) ? color : node.color;
         ctx.fill();
     }
 
@@ -160,6 +166,19 @@ function GraphViewer(props) {
     }
 
 
+    function handleNodeSize(node) {
+        const MIN_SIZE = 24;
+        const MAX_SIZE = 35;
+        const MAX_NEIGHBORS = 5;
+
+        let numNeighbors = node.neighbors.length;
+
+        const NODE_SIZE = Math.max(Math.min(Math.log(numNeighbors) / MAX_NEIGHBORS , 1) * MAX_SIZE , MIN_SIZE);
+
+        return NODE_SIZE;
+    }
+
+
     return(
         <div className={props.className} width={props.width} height={props.height} style={{overflow: 'hidden'}}>
             <ForceGraph2D 
@@ -175,9 +194,10 @@ function GraphViewer(props) {
                 onNodeDragEnd={handleNodeDragEnd}
                 nodeAutoColorBy={(node) => node.community}
                 nodeLabel={(node) => node.node}
-                nodeRelSize={24}
-                nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
-                nodeCanvasObject={paintNode}
+                // nodeRelSize={(node) => handleNodeSize(node)}
+                // nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
+                nodeCanvasObject={(node , ctx) => paintNode(node , undefined , ctx)}
+                nodePointerAreaPaint={paintNode}
 
                 onLinkHover={handleLinkHover}
                 linkDirectionalArrowLength={link => highlightLinks.includes(link) ? 0 : 5}

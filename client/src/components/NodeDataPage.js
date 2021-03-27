@@ -60,7 +60,7 @@ export default function NodeDataPage(props) {
                 </h3>
 
                 <h2> Neighbors: </h2>
-                <h3> {(props.node.taken) ? 'Taken' : 'Not Taken'} </h3>
+                <h3> Under construction :) </h3>
             </React.Fragment>
         );
     }
