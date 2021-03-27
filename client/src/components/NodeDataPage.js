@@ -1,9 +1,21 @@
 import React from 'react';
+import styled from 'styled-components';
 
 import SwitchMenuPage from './SwitchMenuPage';
 
-import { mapNodeTypeToText } from './../util/DataConsts';
 
+const StyledField = styled.h3`
+    overflow-wrap: break-word;
+`;
+
+const IndicatorDot = styled.div`
+    height: ${props => props.size};
+    width: ${props => props.size};
+    border-radius: ${props => 'calc(' + props.size + ' / 2)'};
+    background-color: ${props => props.color};
+    display: inline-block;
+    margin-left: 20px;
+`;
 
 /*
     A page that displays details about a node
@@ -39,14 +51,16 @@ export default function NodeDataPage(props) {
                     {props.node.name}
                 </h1>
 
-                <h2> Course Type: </h2>
-                <h3> {mapNodeTypeToText(props.node.type)} </h3>
+                <h2> Node: </h2>
+                <StyledField> {props.node.node} </StyledField>
 
-                <h2> Course Description: </h2>
-                <h3> {props.node.description} </h3>
+                <h2> Community: </h2>
+                <h3 style={{display: 'flex' , alignItems: 'center'}}> 
+                    {props.node.community === -1 ? 'None' : props.node.community} <IndicatorDot color={props.node.color} size='20px' /> 
+                </h3>
 
-                <h2> Course Taken: </h2>
-                <h3> {(props.node.taken) ? 'Taken' : 'Not Taken'} </h3>
+                <h2> Neighbors: </h2>
+                <h3> Under construction :) </h3>
             </React.Fragment>
         );
     }

@@ -2,7 +2,6 @@ import React , {useState , useEffect , useRef} from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
 import { 
-    mapNodeTypeToColor ,
     LINK_COLOR , 
     NODE_HIGHLIGHT_HOVER , 
     NODE_HIGHLIGHT_ADJACENT , 
@@ -20,7 +19,6 @@ function GraphViewer(props) {
     let [hoveredNode , setHoveredNode]                  = useState(null);
     let [highlightNodes , setHighlightNodes]            = useState([]);
     let [highlightLinks , setHighlightLinks]            = useState([]);
-    let [isNodeLinkHovering , setIsNodeLinkHovering]    = useState(false);
 
 
     const graphRef = useRef(null);
@@ -29,7 +27,7 @@ function GraphViewer(props) {
     useEffect(() => {
         // Cap the many body (aka charge) force
         // Without this, it reaches too far and starts to push stray nodes very far away
-        const MAX_DIST = 150;
+        const MAX_DIST = 1500;
         let chargeForce = graphRef.current.d3Force('charge');
         chargeForce.distanceMax(MAX_DIST);
         graphRef.current.d3Force('charge' , chargeForce);
@@ -39,7 +37,7 @@ function GraphViewer(props) {
         let strengthAccessor = linkForce.strength();
         linkForce.strength((link) => {
             let defaultForce = strengthAccessor(link);
-            return 0.1 * defaultForce;
+            return 0.025 * defaultForce;
         });
         graphRef.current.d3Force('link' , linkForce);
       }, []);
@@ -48,14 +46,16 @@ function GraphViewer(props) {
       useEffect(() => {
         if(props.currentNode) {
             highlightNodeNeighbors(props.currentNode);
+        } else {
+            setHighlightLinks([]);
+            setHighlightNodes([]);
         }
-      });
-
+      } , [props.currentNode]);
 
     
     function handleNodeClick(node , e) {
-        graphRef.current.centerAt(node.x , node.y , 750);
-        graphRef.current.zoom(3 , 750);
+        graphRef.current.centerAt(node.x , node.y , 1000);
+        graphRef.current.zoom(0.75 , 1000);
 
         // Callback
         if(props.onNodeClick) {
@@ -68,11 +68,6 @@ function GraphViewer(props) {
         // Fixes their positions so they don't float around anymore
         node.fx = node.x;
         node.fy = node.y;
-    }
-
-
-    function handleNodeColor(node) {
-        return mapNodeTypeToColor(node.type);
     }
 
 
@@ -118,36 +113,69 @@ function GraphViewer(props) {
 
 
     function handleNodeHover(node) {
-        highlightNodeNeighbors(node);
-        setIsNodeLinkHovering(node === null);
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        } else {
+            highlightNodeNeighbors(node);
+        }
     }
 
 
     function handleLinkHover(link) {
-        highlightLinkNeighbors(link);
-        setIsNodeLinkHovering(link === null);
+        if(props.currentNode) {
+            highlightNodeNeighbors(props.currentNode);
+        } else {
+            highlightLinkNeighbors(link);
+        }
     }
 
 
-    function paintNode(node , ctx) {
+    function paintNode(node , color , ctx) {
         // add ring just for highlighted nodes
+        if(highlightNodes.includes(node)) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, handleNodeSize(node) * 1.4, 0, 2 * Math.PI, false);
+            ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
+            ctx.fill();
+        }
+
         ctx.beginPath();
-        ctx.arc(node.x, node.y, 8 * 1.4, 0, 2 * Math.PI, false);
-        ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
+        ctx.arc(node.x, node.y, handleNodeSize(node), 0, 2 * Math.PI, false);
+        ctx.fillStyle = (color) ? color : node.color;
         ctx.fill();
     }
 
 
     function deactivateForces() {
-        graphRef.current.d3Force('center' , null);
-        graphRef.current.d3Force('charge' , null);
-        graphRef.current.d3Force('link' , null);
+        // Don't just set forces to null! This breaks hot reload and maybe other things
+        function zeroForce(forceName) {
+            let force = graphRef.current.d3Force(forceName);
+            force.strength(0);
+            graphRef.current.d3Force(forceName , force);
+        }
+
+        zeroForce('center');
+        zeroForce('charge');
+        zeroForce('link');
     }
 
 
     function handleBackgroundClick() {
-        graphRef.current.zoomToFit(500 , 50);
+        graphRef.current.zoomToFit(750 , 50);
         props.onNodeClick(null);
+    }
+
+
+    function handleNodeSize(node) {
+        const MIN_SIZE = 24;
+        const MAX_SIZE = 35;
+        const MAX_NEIGHBORS = 5;
+
+        let numNeighbors = node.neighbors.length;
+
+        const NODE_SIZE = Math.max(Math.min(Math.log(numNeighbors) / MAX_NEIGHBORS , 1) * MAX_SIZE , MIN_SIZE);
+
+        return NODE_SIZE;
     }
 
 
@@ -164,10 +192,12 @@ function GraphViewer(props) {
                 onNodeClick={handleNodeClick}
                 onNodeHover={handleNodeHover}
                 onNodeDragEnd={handleNodeDragEnd}
-                nodeColor={handleNodeColor}
-                nodeRelSize={8}
-                nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
-                nodeCanvasObject={paintNode}
+                nodeAutoColorBy={(node) => node.community}
+                nodeLabel={(node) => node.node}
+                // nodeRelSize={(node) => handleNodeSize(node)}
+                // nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
+                nodeCanvasObject={(node , ctx) => paintNode(node , undefined , ctx)}
+                nodePointerAreaPaint={paintNode}
 
                 onLinkHover={handleLinkHover}
                 linkDirectionalArrowLength={link => highlightLinks.includes(link) ? 0 : 5}
@@ -176,12 +206,14 @@ function GraphViewer(props) {
                 linkDirectionalParticleWidth={link => highlightLinks.includes(link) ? 4 : 0}
                 linkColor={() => LINK_COLOR}
                 linkWidth={link => highlightLinks.includes(link) ? 5 : 1}
+                linkLabel={(link) => `${link.source.node} -> ${link.relation} -> ${link.target.node}`}
+                linkCurvature="curvature"
 
                 onBackgroundClick={handleBackgroundClick}
 
-                d3AlphaDecay={0.04}
-                d3VelocityDecay={0.2}
-                cooldownTime={2500}
+                d3AlphaDecay={0.06}
+                d3VelocityDecay={0.1}
+                cooldownTime={3000}
                 onEngineStop={deactivateForces}
             />
         </div>

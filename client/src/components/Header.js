@@ -9,7 +9,7 @@ let StyledHeader = styled.header`
     background-color: #12151c;
     text-align: center;
     line-height: 100px;
-    font-size: 30px;
+    font-size: 25px;
     color: #f7f7f7;
     font-family: 'Courier New', Courier, monospace;
 `;
@@ -18,7 +18,7 @@ let StyledHeader = styled.header`
 function Header(props) {
     return(
         <StyledHeader>
-            Graph Demo
+            Conspiracy Theory Network {props.date ? ' | ' + props.date : ''}
         </StyledHeader>
     )
 }
