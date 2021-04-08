@@ -279,6 +279,36 @@ app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 		});
 	});
 });
+//MATT TODO: change the path as you wish
+app.get('/api/query/nodeID([\?]){0,}', (req,res)=>{
+	/* Get the corresponding possible nodes given string(node name)
+	 * The other queries take in a nodeID. This endpoint should be used to 
+	 * find which node that we actually want to do the more complicated queries for
+	 *
+	 * find the string in req.query.searchNode
+	 * */
+	pool.getConnection((err,connection)=>{
+		var json_object = {};
+		var field1 = "nodes";
+		json_object[field1] = [];
+		
+		var query = "SELECT * FROM nodes WHERE node LIKE '%" + req.query.searchNode + "%'";
+		console.log(query);
+		connection.query(query, (errQ, results, fields)=>{
+			connection.release();
+			console.log(results);
+			if(results != undefined){
+				for(const tuple of results){
+					json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+				}
+			}
+			else{
+				json_object[field1].push("undefined");
+			}	
+			res.json(json_object);
+		});
+	});
+});
 
 app.get('/' , (req , res) => {
     res.sendFile(path.join(__dirname , 'build' , 'index.html'));
@@ -286,4 +316,11 @@ app.get('/' , (req , res) => {
 
 app.listen(port , () => console.log(`Listening at http://localhost:${port}`));
 
-
+process.on('SIGINT', ()=>{
+	console.log("Closing Pool");
+	pool.end((err)=>{
+		if(err){
+			console.log(err);
+		}
+	});
+});
