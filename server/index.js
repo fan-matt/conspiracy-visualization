@@ -31,7 +31,7 @@ app.get('/api/graphDates' , (req , res) => {
 		Get every possible graph date, return array
 	*/
 	pool.getConnection( (err,connection)=>{
-		connection.query("SELECT DISTINCT Date FROM nodes", (err,result,fields)=>{
+		connection.query("SELECT DISTINCT Date FROM nodes", (errQ,result,fields)=>{
 			connection.release();
 			var json_object = {};
 			var date = "Date";
@@ -43,6 +43,7 @@ app.get('/api/graphDates' , (req , res) => {
 		});
 	});
 });
+
 
 
 app.get('/api/graph([\?]){0,}' , (req , res) => {
@@ -86,7 +87,7 @@ app.get('/api/graph([\?]){0,}' , (req , res) => {
 		query += " SELECT * FROM relationships" + 
 				" WHERE Date > \"" + current.toISOString() +"\"" + 
 				" AND Date <= \"" + next_day.toISOString() + "\"";
-		connection.query(query, (err, result, fields)=>{
+		connection.query(query, (errQ, result, fields)=>{
 			connection.release();
 			for(const tuple of result[0]){
 				json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
@@ -100,6 +101,7 @@ app.get('/api/graph([\?]){0,}' , (req , res) => {
 		});
 	});
 });
+
 
 
 app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
@@ -161,7 +163,7 @@ app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
 				" INNER JOIN rel_recurse ON node_id = obj1 OR node_id = obj2;"  
 			" SELECT * FROM relationships " + //obtain relationships
 				" WHERE rel_id = ANY (SELECT rel_id FROM rel_recurse)";
-		connection.query(query, (err, results, fields)=>{
+		connection.query(query, (errQ, results, fields)=>{
 			connection.destroy();
 			if(results[2] != undefined){
 				for(const tuple of results[2]){
@@ -259,16 +261,9 @@ app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2;" + 
 			" SELECT * FROM relationships" + //obtain relationships
 			" WHERE rel_id = ANY(SELECT rel_id FROM rel_recurse)";
-		console.log(query);
-		connection.query(query, (err, results, fields)=>{
+		connection.query(query, (errQ, results, fields)=>{
 			connection.destroy();
 			const depthOffset = 5 + depth * 4 + 1 + 2; 
-			for(i = 0; i < depthOffset; i++){
-				console.log("-------" + i + "------");
-				if(results[i] != undefined){
-					console.log(results[i]);
-				}
-			}
 			const depthOffsetNodes = 5 + depth * 4 + 1;
 			if(results[depthOffsetNodes] != undefined){
 				for(const tuple of results[depthOffsetNodes]){
@@ -284,6 +279,7 @@ app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 		});
 	});
 });
+
 app.get('/' , (req , res) => {
     res.sendFile(path.join(__dirname , 'build' , 'index.html'));
 });
