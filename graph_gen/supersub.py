@@ -172,7 +172,7 @@ entities = wordlists
 
 
 # generate supernodes
-n=10
+n=20
 supernodes_in=[]
 r_in=[]
 supernodes_out=[]
@@ -249,7 +249,7 @@ for i in range(len(entities)):
             pcs=nltk.word_tokenize(s)
             for pc in pcs:
                 d[lemmatizer.lemmatize(pc.lower())]+=1
-        res=helper.pickTop2(word2tfidf,d,5,0.1,False)
+        res=helper.pickTop2(word2tfidf,d,3,0.5,False)
 
         # FIX ATTEMPT 1!!!!!!!!!!!!!!!!!!!!!!!!1
         # remove empty res

@@ -1,0 +1,45 @@
+# generate simmilarity matrix
+num_headwords = number of all headwords present in the data
+sim_mat = similarity matrix of size (num_headwords x num_headwords)
+initialize each element of sim_mat to 0
+
+headword_rels = hashmap of headword to list of indices where headword appears 
+for each index, (subj, rel, obj) relationship in the data:
+  for each headword appearing in the relationship:
+    add index to the corresponding headword_rels element
+
+for each h, index_list in headword_rels:
+  adj_nodes = dictionary mapping headwords of edges to lists of nodes
+  counts = dictionary mapping nodes to the number of edges between that node and h 
+  for each i in index_list:
+    (subj, rel, obj) is the element at index i
+    if headword(subj) == h:
+      append headword(obj) to adj_nodes[headword(rel)]
+      counts[headowrd(obj] += 1
+    else:
+      append headword(subj) to adj_nodes[headword(rel)]
+      counts[headword(subj)] += 1
+  
+  for each adj_nodes[rel]:
+    for each pair vi, vj in adj_nodes[rel]:
+      sim_mat[vi][vj] += 1 / counts[vj]
+      sim_mat[vj][vi] += 1 / counts[vi]
+    
+
+convert similarity matrix into graph
+cluster similar entities into groups
+# either direct thresholding or thresholding on communities
+
+
+# generate relationships between entity groups
+num_rels = total number of relationships in the data
+for each pair of grouped entities, e1 and e2:
+  rel = list of relationships between each entity in e1 and each entity in e2
+  rel_score = mapping of rel to score
+  for each r in rel:
+    N_total = number of times stemmed r appears in the data
+    P_corpus = N_total / num_rels
+    N_context = number of times stemmed r appears in rel
+    P_pair = N_context / size(rel)  
+    rel_score[r] = ln(P_pair / P_corpus)
+  relationship between e1 and e2 is the r with highest score in rel_score

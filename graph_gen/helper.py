@@ -89,8 +89,8 @@ def findNodeConnections(wordlist,df_rels,n,PRINT=False):
     # iterate through relationship rows
     for ind, row in df_rels.iterrows():
         # skip duplicate and long args
-        if not row['isDup'] and len(str(row['arg1']))<100:
-            if len(str(row['arg2']))<100:
+        if not row['isDup'] and len(str(row['arg1']))<50:
+            if len(str(row['arg2']))<50:
                 # check for None - ran into this issue before
                 if(str(row['arg1']) == None):
                     print("None row, index:", ind)
@@ -172,7 +172,7 @@ def findNodeConnections(wordlist,df_rels,n,PRINT=False):
 regex = re.compile('[^a-zA-Z]')
 # what to do if returns None?
 # currently ignores return if None
-def getSecondBest(wordlist,d_tmp):
+def getSecondBest(wordlist,d_tmp,thres=0):
     # tmp contains d_tmp values (word frequencies) sorted from greatest to least
     tmp=list(d_tmp.values())
     tmp.sort()
@@ -185,7 +185,7 @@ def getSecondBest(wordlist,d_tmp):
             # find word (w) that matches current frequency (tmp[i]) 
             # return first valid word that hasn't been seen before 
             if score == tmp[i] and w not in wordlist and w not in seen:
-                if score>0:
+                if score>thres:
                     if w not in list(stopwords.words('english')) and len(res_w)>0:
                         return w
                 seen.add(w)
