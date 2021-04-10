@@ -27,6 +27,11 @@ app.get('/api/graphDates' , (req , res) => {
 		Get every possible graph date, return array
 	*/
 	pool.getConnection( (err,connection)=>{
+		if(err) {
+			console.log(err);
+			return;
+		}
+
 		connection.query("SELECT DISTINCT Date FROM nodes", (err,result,fields)=>{
 			connection.release();
 			var json_object = {};
