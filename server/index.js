@@ -10,8 +10,8 @@ const port  = 5000;
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host:'127.0.0.1',
-	user:'elee',
-	password: 'password',
+	user:'nodeApp',
+	password: '18dkniuiaookjs',
 	database:'MAINDB',
 	multipleStatements:true
 }); 
@@ -28,8 +28,17 @@ app.get('/api/helloworld' , (req , res) => {
 
 app.get('/api/graphDates' , (req , res) => {
 	/*
-		Get every possible graph date, return array
-	*/
+	 * Get every possible graph date, return array
+	 * 
+	 * Sends Back JSON object:
+	 * {
+	 *	Date: [amount of thumbs]
+	 * }
+	 * If SQL query failed returns:
+	 * {
+	 *	Date: "failed_query"
+	 * }
+	 * */
 	pool.getConnection( (err,connection)=>{
 		if(err) {
 			console.log(err);
@@ -39,11 +48,17 @@ app.get('/api/graphDates' , (req , res) => {
 		connection.query("SELECT DISTINCT Date FROM nodes", (errQ,result,fields)=>{
 			connection.release();
 			var json_object = {};
-			var date = "Date";
-			json_object[date] = [];
-			for(const tuple of result){
-				json_object[date].push(tuple.Date);
+			var field1 = "Date";
+			
+			if(errQ){
+				json_object[fiedl1] = "failed_query";
 			}
+			else{
+				json_object[field1] = [];
+				for(const tuple of result){
+					json_object[field1].push(tuple.Date);
+				}
+			}	
 			res.json(json_object);
 		});
 	});
@@ -52,30 +67,35 @@ app.get('/api/graphDates' , (req , res) => {
 
 
 app.get('/api/graph([\?]){0,}' , (req , res) => {
-	/*
-		Get entire graph given date, return JSON:
-
-		{
-			nodes: [
-				{
-					id: 'id1' ,
-					...
-				}
-			] ,
-			links: [
-				{
-					source: 'id1' ,
-					target: 'id2' ,
-					...
-				} ,
-				...
-			]
-		}
-
-		Find the date here:
-		req.query.date
-	*/
-
+	/* Get entire graph given date, return JSON:
+	 *
+	 * GET Parameters: accessed through req.query.paramter:
+	 * date:date of graph desired
+	 *
+	 * {
+	 *	nodes:[
+	 *		{
+	 *			node_id: #,
+	 *			...
+	 *		},
+	 *		...
+	 *	],
+	 *	links: [
+	 *		{
+	 *			obj1:'obj1',
+	 *			obj2:'obj2',
+	 *			...
+	 *		},
+	 *		...
+	 *	]
+	 * }
+	 * if SQL query fails returns: 
+	 * {
+	 *	nodes: "failed_query",
+	 *	links: []
+	 * }
+	 *
+	 * */
 	pool.getConnection((err,connection)=>{
 		var json_object = {};
 		var field1 = "nodes";
@@ -94,14 +114,19 @@ app.get('/api/graph([\?]){0,}' , (req , res) => {
 				" AND Date <= \"" + next_day.toISOString() + "\"";
 		connection.query(query, (errQ, result, fields)=>{
 			connection.release();
-			for(const tuple of result[0]){
-				json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+			if(errQ){
+				json_object[field1] = "failed_query";
 			}
-			
-			for(const tuple of result[1]){
-				json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
-			}
-			
+			else{
+					
+				for(const tuple of result[0]){
+					json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+				}
+				
+				for(const tuple of result[1]){
+					json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+				}
+			}	
 			res.json(json_object);
 		});
 	});
@@ -112,7 +137,9 @@ app.get('/api/graph([\?]){0,}' , (req , res) => {
 app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
 	/* Get the nodes and edges that make up the largest connected subgraph
 	 * containing the specified node(s) ,return JSON:
-
+	 *
+	 * GET Parameters: accessed through the req.query.parameter:
+	 * date: date of sub-graph
 		{
 			nodes: [
 				{
@@ -129,8 +156,12 @@ app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
 				...
 			]
 		}
-	 * find nodeID in req.query.nodeID 
-	 * find date in req.query.date
+	 * 
+	 * If SQL statement fails sends back 
+	 * {
+	 *	nodes: "failed_query",
+	 *	links: []
+	 * }
 	 * */
 	pool.getConnection((err,connection)=>{
 		var json_object = {};
@@ -170,14 +201,19 @@ app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
 				" WHERE rel_id = ANY (SELECT rel_id FROM rel_recurse)";
 		connection.query(query, (errQ, results, fields)=>{
 			connection.destroy();
-			if(results[2] != undefined){
-				for(const tuple of results[2]){
-					json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
-				}
+			if(errQ){
+				json_object[field1] = "failed_query";
 			}
-			if(results[3] != undefined) {
-				for(const tuple of results[3]){
-					json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+			else{
+				if(results[2] != undefined){
+					for(const tuple of results[2]){
+						json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+					}
+				}
+				if(results[3] != undefined) {
+					for(const tuple of results[3]){
+						json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+					}
 				}
 			}
 			res.json(json_object);
@@ -189,8 +225,13 @@ app.get('/api/query/connectedComponent([\?]){0,}', (req,res)=>{
 app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 	/* Get the nodes and edges that are n edges away from the specified node
 	 * containing the specified node ,return JSON:
-
-		{
+	 *
+	 * GET Parameters: accessed through req.query.parameter
+	 * nodeID: id of specified node
+	 * date: date of specified node
+	 * depth: how far look for edges and nodes
+	 * Returns:
+	 * 	{
 			nodes: [
 				{
 					id: 'id1' ,
@@ -206,9 +247,12 @@ app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 				...
 			]
 		}
-	 * find nodeID in req.query.nodeID 
-	 * find date in req.query.date
-	 * fine depth in req.query.depth , depth must be greater than or equal to 1
+
+	 * If SQL query fails returns:
+	 * { 
+	 * 	nodes:"failed_query",
+	 * 	links:[]
+	 * }
 	 * */
 	pool.getConnection((err,connection)=>{
 		var json_object = {};
@@ -268,29 +312,45 @@ app.get('/api/query/connectedWithDepth([\?]){0,}', (req,res)=>{
 			" WHERE rel_id = ANY(SELECT rel_id FROM rel_recurse)";
 		connection.query(query, (errQ, results, fields)=>{
 			connection.destroy();
-			const depthOffset = 5 + depth * 4 + 1 + 2; 
-			const depthOffsetNodes = 5 + depth * 4 + 1;
-			if(results[depthOffsetNodes] != undefined){
-				for(const tuple of results[depthOffsetNodes]){
-					json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
-				}
+			if(errQ){
+				json_object[field1] = "failed_query";	
 			}
-			if(results[depthOffsetNodes + 1] != undefined) {
-				for(const tuple of results[depthOffsetNodes + 1]){
-					json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+			else{
+				const depthOffset = 5 + depth * 4 + 1 + 2; 
+				const depthOffsetNodes = 5 + depth * 4 + 1;
+				if(results[depthOffsetNodes] != undefined){
+					for(const tuple of results[depthOffsetNodes]){
+						json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+					}
+				}
+				if(results[depthOffsetNodes + 1] != undefined) {
+					for(const tuple of results[depthOffsetNodes + 1]){
+						json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+					}
 				}
 			}
 			res.json(json_object);
 		});
 	});
 });
+
 //MATT TODO: change the path as you wish
-app.get('/api/query/nodeID([\?]){0,}', (req,res)=>{
+app.get('/api/query/nodeSearch([\?]){0,}', (req,res)=>{
 	/* Get the corresponding possible nodes given string(node name)
 	 * The other queries take in a nodeID. This endpoint should be used to 
 	 * find which node that we actually want to do the more complicated queries for
 	 *
-	 * find the string in req.query.searchNode
+	 * GET Parameter:
+	 * searchNode: given search string
+	 * 
+	 * On Success Returns:
+	 * {
+	 *	nodes: [ARRAY OF TUPLES WITH NODE DETAILS]
+	 * }
+	 * On FAILURE Returns:
+	 * {
+	 *	nodes: 'failed_query'
+	 * }
 	 * */
 	pool.getConnection((err,connection)=>{
 		var json_object = {};
@@ -298,34 +358,276 @@ app.get('/api/query/nodeID([\?]){0,}', (req,res)=>{
 		json_object[field1] = [];
 		
 		var query = "SELECT * FROM nodes WHERE node LIKE '%" + req.query.searchNode + "%'";
-		console.log(query);
 		connection.query(query, (errQ, results, fields)=>{
 			connection.release();
-			console.log(results);
-			if(results != undefined){
-				for(const tuple of results){
-					json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+			if(errQ){
+				console.log(errQ);
+				json_object[field1] = "failed_query";	
+			}
+			else if(results != undefined){
+				if(results.length == 0){
+					json_object[field1] = [];
+				}
+				else{
+					for(const tuple of results){
+						json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+					}
 				}
 			}
 			else{
-				json_object[field1].push("undefined");
+				json_object[field1] = "failed_query";
 			}	
 			res.json(json_object);
 		});
 	});
 });
 
+//MATT TODO: replace the path as you wish
+app.get('/api/query/relationshipSearh([\?]){0,}', (req,res)=>{
+	/* Get the corresponding possible relationships given string(node name)
+	 * The other queries take in a nodeID. This endpoint should be used to 
+	 * find which node that we actually want to do the more complicated queries for
+	 *
+	 * GET Parameter:
+	 * searchRel: given search string
+	 * 
+	 * On Success Returns:
+	 * {
+	 *	relationships: [ARRAY OF TUPLES WITH NODE DETAILS]
+	 * }
+	 * On FAILURE Returns:
+	 * {
+	 *	relationships: 'failed_query'
+	 * }
+	 * */
+	pool.getConnection((err,connection)=>{
+		var json_object = {};
+		var field1 = "relationships";
+		json_object[field1] = [];
+		
+		var query = "SELECT * FROM relationships WHERE relation LIKE '%" + req.query.searchNode + "%'";
+		connection.query(query, (errQ, results, fields)=>{
+			connection.release();
+			if(errQ){
+				console.log(errQ);
+				json_object[field1] = "failed_query";	
+			}
+			else if(results != undefined){
+				if(results.length == 0){
+					json_object[field1] = [];
+				}
+				else{
+					for(const tuple of results){
+						json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+					}
+				}
+			}
+			else{
+				json_object[field1] = "failed_query";
+			}	
+			res.json(json_object);
+		});
+	});
+});
+
+
+
+//MATT TODO: change the path as you wish
+app.post('/api/update/nodeRating([\?]){0,}',(req,res)=>{
+	/* Update the thumbs up/down for nodes
+	 * Returns updated thumbs up/down
+	 *
+	 * POST parameters: accessed by req.body.parameter
+	 * date: date of node to update
+	 * nodeID: ID of node to update
+	 * upDown: 0 if want to decrement rating, 1 if want to increment rating
+	 * 
+	 * Sends Back JSON object:
+	 * {
+	 *	thumbs: [amount of thumbs]
+	 * }
+	 * If SQL query failed returns:
+	 * {
+	 *	thumbs: "failed_query"
+	 * }
+	 * If SQL query does not find any relationship with 
+	 * given details returns:
+	 * {
+	 *	thumbs: []
+	 * }
+	 * */
+	pool.getConnection((err, connection)=>{
+		var json_object = {};
+		var field1 = 'thumbs';
+		var current = new Date(req.body.date);
+		current.setDate(current.getDate() - 1);
+		var next_day = new Date(req.body.date);
+		current = helper.formattedDateString(current);
+		next_day = helper.formattedDateString(next_day);
+		var upOrDown;
+
+		if(req.body.upDown=="1"){
+			upOrDown = "thumbs = thumbs + 1"; 
+		}
+		else if(req.body.upDown == "0"){
+			upOrDown = "thumbs = thumbs - 1"
+		}
+		else {
+			upOrDown = "thumbs = thumbs";
+		}
+		var query = 
+			"UPDATE node_rating" + 
+			" SET " + upOrDown + 
+			" WHERE " + 
+			" Date > \"" +  current + "\" AND" + 
+			" Date <= \"" +  next_day + "\" AND" +
+			" node_id = " + req.body.nodeID + ";" +
+			" SELECT * FROM node_rating " + //second query
+			" WHERE " + 
+			" Date > \"" +  current + "\" AND" + 
+			" Date <= \"" +  next_day + "\" AND" +
+			" node_id = " + req.body.nodeID;	
+		connection.query(query, (errQ, results, fields)=> {
+			connection.release();
+			if(errQ){
+				console.log(errQ);
+				json_object[field1] = "failed_query";
+			}	
+			else if(results[1] != undefined){
+				if(results[1].length == 0){
+					json_object[field1] = [];
+				}
+				else{
+					json_object[field1] = results[1][0].thumbs;
+				}
+			}
+			else{
+				json_object[field1] = "failed_query";
+			}
+			res.json(json_object);
+		});
+	});
+});
+/**-----------BIG TO-DOs-------------
+ * 1. create the second endpoint for updating the rel Rating
+ * 2. alter the tables on SPADE, remove the thumbs down
+ * 3. Escape all input strings
+ * 4. Create endpoint to obtain all relationships and nodes with 
+ * 	rating above a given number
+ * 5. Create tests for each endpoint
+ *
+ * WHICH are done:
+ * 1,2
+ * */
+//MATT TODO: change the path as you wish
+app.post('/api/update/relRating([\?]){0,}',(req,res)=>{
+	/* Update the thumbs up/down for relationships
+	 * Returns updated thumbs up/down
+	 * 
+	 *
+	 * POST Parameters: accessed through req.body.parameter:
+	 * date : date of node to update
+	 * obj1 : node_id of source of relationship
+	 * obj2 : node_id of sink of relationship
+	 * relID : id of relationship between source and sink
+	 * upDown: 0 to decrement rating, 1 to increment rating
+	 *
+	 * Sends Back JSON object:
+	 * {
+	 *	thumbs: [amount of thumbs]
+	 * }
+	 * If SQL query failed returns:
+	 * {
+	 *	thumbs: "failed_query"
+	 * }
+	 * If SQL query does not find any relationship with 
+	 * given details returns:
+	 * {
+	 *	thumbs: []
+	 * }
+	 * */
+	pool.getConnection((err, connection)=>{
+		var json_object = {};
+		var field1 = 'thumbs';
+
+		var current = new Date(req.body.date);
+		current.setDate(current.getDate() - 1);
+		var next_day = new Date(req.body.date);
+
+		current = helper.formattedDateString(current);
+		next_day = helper.formattedDateString(next_day);
+		
+		var upOrDown;
+		
+		if(req.body.upDown == "1"){
+			upOrDown = "thumbs = thumbs + 1";
+		}
+		else if(req.body.upDown == "0"){
+			upOrDown = "thumbs = thumbs - 1";
+		}
+		else {
+			upOrDown = "thumbs = thumbs";
+		}
+		
+		var query = 
+			"UPDATE rel_rating" + 
+			" SET " + upOrDown + 
+			" WHERE" + 
+			" Date > \"" +  current + "\" AND" + 
+			" Date <= \"" +  next_day + "\" AND" +
+			" obj1 = " + req.body.obj1 + " AND" + 
+			" obj2 = " + req.body.obj2 + " AND" + 
+			" rel_id = " + req.body.relID+";" +
+			" SELECT * FROM rel_rating " + //second query
+			" WHERE " +
+			" Date > \"" +  current + "\" AND" + 
+			" Date <= \"" +  next_day + "\" AND" +
+			" obj1 = " + req.body.obj1 + " AND" + 
+			" obj2 = " + req.body.obj2 + " AND" + 
+			" rel_id = " + req.body.relID;
+		connection.query(query, (errQ, results, fields)=> {
+			connection.release();
+			if(errQ) {
+				console.log(errQ);
+				json_object[field1] = "failed_query";
+			}
+			else if(results[1] != undefined){
+				if(results[1].length == 0){
+					json_object[field1] = [];
+				}
+				else{
+					json_object[field1] = results[1][0].thumbs;
+				}
+			}
+			else{
+				json_object[field1] = "failed_query";
+			}
+			res.json(json_object);
+		});
+	});
+});
+
+
 app.get('/' , (req , res) => {
     res.sendFile(path.join(__dirname , 'build' , 'index.html'));
 });
 
-app.listen(port , () => console.log(`Listening at http://localhost:${port}`));
+const server = app.listen(port , () => console.log(`Listening at http://localhost:${port}`));
 
 process.on('SIGINT', ()=>{
-	console.log("Closing Pool");
+	console.log("Closing Pool.");
 	pool.end((err)=>{
 		if(err){
 			console.log(err);
 		}
+		console.log("Pool Closed.");
 	});
+	console.log("Closing Server.");
+	server.close((err)=>{
+		if(err){
+			console.log(err);
+		}
+		console.log("Server Closed.")
+	})
+	process.exitCode = 0;
 });
