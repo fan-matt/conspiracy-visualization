@@ -1,0 +1,120 @@
+For all:
+
+    All endpoints are POST
+
+    Error:
+        return 
+        {
+            Error: 'errormsg' ,
+        }
+
+
+    Dates as-is from graphDates
+
+
+
+/*
+    Find nodes and links/rels matching keywords and communitites
+    
+    don't filter by communities if communitites === ''
+    don't filter by keywords if keywords === ''
+
+
+    links- ignore communities input
+
+
+    None found- return:
+
+    {
+        nodes: [] ,
+        links: [] ,
+    }
+*/
+findObject:
+    input:
+        {
+            communities: string ,   // '1;2;3;5;25'
+            keywords: 'string' ,    // 'trump;biden;covid'
+        }
+    
+    output:
+        {
+            nodes: [{Node object}] ,
+            links: [{Link object}] ,
+        }
+            
+
+
+
+
+/*
+    returns subgraph centered at node with id 'id' and date 'date' with neighborhood of depth 'depth'.
+
+    depth === -1 for connected component
+    id === -1 for entire graph
+
+    depth >= -1, depth \in Z
+    id >= -1 , id \in Z, id != 0
+
+    None found- return:
+
+        {
+            nodes: [] ,
+            links: [] ,
+        }
+*/
+neighborhood
+    input: 
+        {
+            id: int ,   // Node id
+            date: 'date' ,
+            depth: int
+        }
+
+    output:
+        // Subgraph
+        {
+            nodes: [] ,
+            links: [] ,
+        }
+
+
+
+voteNode
+    input:
+        {
+            id: int ,
+            date: 'date' ,
+            vote: boolean ,         // true for upvote, false for downvote
+        }
+    
+    output:
+        none
+
+
+/*
+    All ID's >= 1
+*/
+voteRel
+    input:
+        {
+            id: int ,
+            date: 'date' ,
+            sourceId: int ,
+            targetId: int ,
+            vote: boolean ,         // true for upvote, false for downvote
+        }
+    
+    output:
+        none
+
+
+
+graphDates
+    input:
+        none
+
+    output:
+        {
+            dates: [] ,
+        }
