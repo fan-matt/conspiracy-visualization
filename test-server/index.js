@@ -1,11 +1,11 @@
 const axios = require('axios');
 
-axios.post('http://localhost:5000/api/update/relRating', {
-	date: '2020-01-01T08:00:00.000Z',	
-	obj1: '1',
-	obj2: '2',
-	relID : '1',
-	upDown: '1'
+axios.post('http://localhost:5000/api/findObject', {
+	input:{
+		communities: '3;4',
+		keywords: '',
+		date:'2020-02-02T08:00:00.000Z'
+	}
 })
 .then(res =>{
 	console.log("---------------------------Response----------------------")
