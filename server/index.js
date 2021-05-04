@@ -224,7 +224,7 @@ app.post('/api/neighborhood' , (req , res) => {
 	 * 
 	 * input: 
 	 * {
-	 *	id: int, 	//node id
+	 *	id: int, 	//node id, -1 for the entire graph
 	 *	date: 'date', 	//has to be in the format that is 
 	 *		      	//acceptable for Date.parse()
 	 *	depth: int	//-1 for the entire connected Component
@@ -275,48 +275,61 @@ app.post('/api/neighborhood' , (req , res) => {
 		const date_esc = connection.escape(node_date);
 		const prev_date_esc = connection.escape(prev_date);	
 		
-		let query = 
-			" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
-                                " (rel_id INT," +
-                                " obj1 INT," +
-                                " obj2 INT," +
-                                " Date date);"; 			
-		query +=
-			" SET SESSION cte_max_recursion_depth = " + depth_esc + ";" +//set max depth 
-			" INSERT INTO rel_recurse" + //insert the values
-			" WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
-			" ((SELECT -1 AS rel_id, " +
-				id_esc + " AS obj1, " +
-				id_esc + " AS obj2, " +
-				"20200101 AS Date)" +
-			" UNION" +
-			"(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
-			" FROM relationships R, CN " +
-			" WHERE" +
-			" (CN.obj1 = R.obj1 OR" +
-			" CN.obj2 = R.obj1 OR" +
-			" CN.obj1 = R.obj2 OR" +
-			" CN.obj2 = R.obj2) AND" +
-			" R.Date > " + prev_date_esc +" AND" +
-			" R.Date <= " + date_esc + " )) SELECT * FROM CN" +  
-			" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
-                        " INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
-			" WHERE nodes.Date >" + prev_date_esc + " AND" + 
-			" nodes.Date <=" + date_esc + ";" +
-                        " SELECT " + 
-			" DISTINCT relationships.Date," + 
-			" relationships.obj1," + 
-			" relationships.obj2," + 
-			" relationships.relation," +
-			" relationships.rel_id," + 
-			" relationships.graph_id" + 
-			" FROM relationships" + //obtain relationships
-			" INNER JOIN rel_recurse ON"+
-			" rel_recurse.rel_id = relationships.rel_id AND" +
-			" rel_recurse.obj1 = relationships.obj1 AND" +
-			" rel_recurse.obj2 = relationships.obj2" +
-			" WHERE relationships.Date > " + prev_date_esc + " AND" + 
-			" relationships.Date <= " + date_esc; 
+		let query;
+		let offset;
+		if(req.body.input.id == -1){
+			query = "SELECT * FROM nodes WHERE" + 
+				" Date > " + prev_date_esc + " AND"
+				" Date <= " + date_esc +
+				";SELECT * FROM relationships WHERE" + 
+				" Date > " + prev_date_esc + " AND"
+				" Date <= " + date_esc;	
+			offset = 0;
+		}else{
+			query = 
+				" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
+					" (rel_id INT," +
+					" obj1 INT," +
+					" obj2 INT," +
+					" Date date);"; 			
+			query +=
+				" SET SESSION cte_max_recursion_depth = " + depth_esc + ";" +//set max depth 
+				" INSERT INTO rel_recurse" + //insert the values
+				" WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
+				" ((SELECT -1 AS rel_id, " +
+					id_esc + " AS obj1, " +
+					id_esc + " AS obj2, " +
+					"20200101 AS Date)" +
+				" UNION" +
+				"(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
+				" FROM relationships R, CN " +
+				" WHERE" +
+				" (CN.obj1 = R.obj1 OR" +
+				" CN.obj2 = R.obj1 OR" +
+				" CN.obj1 = R.obj2 OR" +
+				" CN.obj2 = R.obj2) AND" +
+				" R.Date > " + prev_date_esc +" AND" +
+				" R.Date <= " + date_esc + " )) SELECT * FROM CN" +  
+				" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
+				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
+				" WHERE nodes.Date >" + prev_date_esc + " AND" + 
+				" nodes.Date <=" + date_esc + ";" +
+				" SELECT " + 
+				" DISTINCT relationships.Date," + 
+				" relationships.obj1," + 
+				" relationships.obj2," + 
+				" relationships.relation," +
+				" relationships.rel_id," + 
+				" relationships.graph_id" + 
+				" FROM relationships" + //obtain relationships
+				" INNER JOIN rel_recurse ON"+
+				" rel_recurse.rel_id = relationships.rel_id AND" +
+				" rel_recurse.obj1 = relationships.obj1 AND" +
+				" rel_recurse.obj2 = relationships.obj2" +
+				" WHERE relationships.Date > " + prev_date_esc + " AND" + 
+				" relationships.Date <= " + date_esc;
+			offset = 3;
+		}
 		connection.query(query, (errQ,result,fields)=>{
 			connection.destroy();
 		
@@ -328,11 +341,11 @@ app.post('/api/neighborhood' , (req , res) => {
 				let json_object = {};
 				const fields = ["nodes", "links"];	
 
-				const depthOffsetNodes = 3;
+				
 				for(let i = 0; i < 2; i++){
-					if(result[depthOffsetNodes + i] != undefined){	
+					if(result[offset + i] != undefined){	
 						json_object[fields[i]] = [];
-						for(const tuple of result[depthOffsetNodes + i]){
+						for(const tuple of result[offset + i]){
 							json_object[fields[i]].push(tuple);
 						}
 					}
