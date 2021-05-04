@@ -283,10 +283,10 @@ app.post('/api/neighborhood' , (req , res) => {
 		let offset;
 		if(req.body.input.id == -1){
 			query = "SELECT * FROM nodes WHERE" + 
-				" Date > " + prev_date_esc + " AND"
+				" Date > " + prev_date_esc + " AND" + 
 				" Date <= " + date_esc +
 				";SELECT * FROM relationships WHERE" + 
-				" Date > " + prev_date_esc + " AND"
+				" Date > " + prev_date_esc + " AND" + 
 				" Date <= " + date_esc;	
 			offset = 0;
 		}else{
@@ -334,6 +334,7 @@ app.post('/api/neighborhood' , (req , res) => {
 				" relationships.Date <= " + date_esc;
 			offset = 3;
 		}
+		console.log(query);
 		connection.query(query, (errQ,result,fields)=>{
 			connection.destroy();
 		

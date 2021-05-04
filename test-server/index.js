@@ -1,9 +1,10 @@
 const axios = require('axios');
 
-axios.post('http://localhost:5000/api/findObject', {
+axios.post('http://localhost:5000/api/neighborhood', {
 	input:{
-		communities: [1],
-		keywords: ['1']
+		id: -1,	
+		date: '2020-01-01T08:00:00.000Z',	
+		depth: -1
 	}
 })
 .then(res =>{
