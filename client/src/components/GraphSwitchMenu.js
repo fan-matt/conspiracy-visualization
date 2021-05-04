@@ -1,8 +1,9 @@
 import React from 'react';
-import { BsCardHeading , BsGear } from 'react-icons/bs';
+import { BsCardHeading , BsFilter , BsGear } from 'react-icons/bs';
 
 import SwitchMenu from './SwitchMenu';
 import NodeDataPage from './NodeDataPage';
+import GraphFilterPage from './GraphFilterPage';
 import GraphSettingsPage from './GraphSettingsPage';
 
 
@@ -18,11 +19,13 @@ import GraphSettingsPage from './GraphSettingsPage';
 export default function GraphSwitchMenu(props) {
     let pages = [
         <NodeDataPage node={props.currentNode} /> ,
+        <GraphFilterPage filters={props.filters} setFilters={props.setFilters} filter={props.filter} /> ,
         <GraphSettingsPage />
     ];
 
     let icons = [
         <BsCardHeading /> ,
+        <BsFilter /> ,
         <BsGear /> ,
     ];
 

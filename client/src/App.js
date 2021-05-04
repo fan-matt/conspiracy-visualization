@@ -32,13 +32,18 @@ let MenuAndFooter = styled.div`
         N/A
 */
 function App() {
-    let [splitWidth , setSplitWidth]                    = useState(window.innerWidth);
-    let [graphWidth , setGraphWidth]                    = useState(splitWidth / 3 * 2);
-    let [graphHeight , setGraphHeight]                  = useState(window.innerHeight - 100);
-    let [currentNode , setCurrentNode]                  = useState(null);
-    let [currentPageIndex , setCurrentPageIndex]        = useState(0);
-    let [data , setData]                                = useState({nodes:[] , links:[]});
-    const [graphDate , setGraphDate]                    = useState(undefined);
+    const [splitWidth , setSplitWidth]                      = useState(window.innerWidth);
+    const [graphWidth , setGraphWidth]                      = useState(splitWidth / 3 * 2);
+    const [graphHeight , setGraphHeight]                    = useState(window.innerHeight - 100);
+    const [currentNode , setCurrentNode]                    = useState(null);
+    const [currentPageIndex , setCurrentPageIndex]          = useState(0);
+    const [data , setData]                                  = useState({nodes:[] , links:[]});
+    const [graphDate , setGraphDate]                        = useState(undefined);
+    const [graphFilters , setGraphFilters]                  = useState({
+        nodes: '' ,
+        communities: '' ,
+    });
+
 
     useEffect(() => {
         window.addEventListener('resize' ,  onWindowResize);
@@ -53,6 +58,11 @@ function App() {
         .then(res => res.text())
         .then(text => console.log(text));
 
+        fetchGraph();
+    } , [])
+
+
+    function fetchGraph() {
         fetch('./api/graphDates')
         .then(res => res.json())
         .then(dateJson => {
@@ -99,16 +109,43 @@ function App() {
                     }
                 });
 
-                // Prune neighborless nodes
-                graphJson.nodes = nodes.filter(node => node.neighbors.length > 0);
                 
+                
+
+                // Filter
+                if(graphFilters.communities !== '') {
+                    let communityFilter = graphFilters.communities.split(';');
+                    graphJson.nodes = graphJson.nodes.filter(node => communityFilter.includes(String(node.community)));
+                }
+
+                if(graphFilters.nodes !== '') {
+                    let nodeFilter = graphFilters.nodes.split(';');
+
+                    console.log(nodeFilter);
+
+                    graphJson.nodes = graphJson.nodes.filter(node => {
+                        let found = false;
+                        
+                        nodeFilter.forEach(searchNode => {
+                            found = found || (String(node.node).search(searchNode) !== -1);
+                        });
+
+                        return found;
+                    });
+                }
+
+
+                // Prune neighborless nodes
+                graphJson.nodes = graphJson.nodes.filter(node => node.neighbors.length > 0);
+
+
                 console.log('FIXED JSON')
                 console.log(graphJson);
                 setData(graphJson);
                 setGraphDate(formatDate(mostRecent));
             })
         });
-    } , [])
+    }
 
 
     /*
@@ -146,6 +183,21 @@ function App() {
     }
     
 
+    function setGraphFilter(field , value) {
+        let filterCopy = Object.assign({} , graphFilters);
+        filterCopy[field] = value;
+        setGraphFilters(filterCopy);
+    }
+
+
+    function filterGraph() {
+        console.log('filter function!');
+        console.log(graphFilters);
+
+        fetchGraph();
+    }
+
+
     return (
         <div className="App">
             <MainLayout date={graphDate}>
@@ -162,7 +214,10 @@ function App() {
                         <GraphSwitchMenu
                             pageIndex={currentPageIndex} 
                             onIndexChange={onPageChange} 
-                            currentNode={currentNode}    
+                            currentNode={currentNode}
+                            filters={graphFilters}    
+                            setFilters={setGraphFilter}
+                            filter={filterGraph}
                         />
                         <Footer />
                     </MenuAndFooter>
