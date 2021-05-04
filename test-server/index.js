@@ -1,12 +1,9 @@
 const axios = require('axios');
 
-axios.post('http://localhost:5000/api/voteRel', {
+axios.post('http://localhost:5000/api/findObject', {
 	input:{
-		id: 1,
-		date:'2020-01-01T08:00:00.000Z',
-		sourceId: 1, 
-		targetId: 3,
-		vote: false
+		communities: [1],
+		keywords: ['1']
 	}
 })
 .then(res =>{

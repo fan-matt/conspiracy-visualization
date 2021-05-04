@@ -105,7 +105,6 @@ app.post('/api/findObject' , (req , res) => {
 	 * */
 	
 	//check for all parameters
-	console.log(res);
 	if(req.body.input == undefined || req.body.input.communities == undefined || req.body.input.keywords == undefined){
 		InvOrMissingParams(res);
 		return;
@@ -132,14 +131,36 @@ app.post('/api/findObject' , (req , res) => {
 		}
 		
 		//create node query
-		let node_query = 'SELECT * FROM nodes';
-		let rel_query = ';SELECT * FROM relationships';	
+		let node_query = 
+			'SELECT' + 
+			' nodes.Date,' + 
+			' nodes.node_id,' +
+			' nodes.node,' + 
+			' nodes.community,' + 
+			' nodes.graph_id' +
+			' FROM nodes' + 
+			' INNER JOIN node_rating ON' + 
+			' node_rating.node_id = nodes.node_id AND' +  
+			' node_rating.Date = nodes.Date';
+		let rel_query = 
+			';SELECT' + 
+			' relationships.Date,' + 
+			' relationships.obj1,' + 
+			' relationships.obj2,' + 
+			' relationships.relation,' + 
+			' relationships.rel_id,' + 
+			' relationships.graph_id' + 
+			' FROM relationships' + 
+			' INNER JOIN rel_rating ON' + 
+			' rel_rating.Date = relationships.Date AND' + 
+			' rel_rating.obj1 = relationships.obj1 AND' +
+			' rel_rating.obj2 = relationships.obj2';	
 		//adding constraints
 
 		if(req.body.input.communities != '' || req.body.input.keywords != ''){	
 			node_query += " WHERE";	
 			if(req.body.input.communities != ''){	
-				const communities = req.body.input.communities.split(';');
+				const communities = req.body.input.communities;
 				
 				for(let i = 0; i < (communities.length - 1); i++){
 					node_query += " community = " + connection.escape(communities[i]) + " OR"; 	
@@ -149,7 +170,7 @@ app.post('/api/findObject' , (req , res) => {
 			}
 			if(req.body.input.keywords != ''){
 				rel_query += " WHERE";	
-				const keywords = req.body.input.keywords.split(';');
+				const keywords = req.body.input.keywords;
 				
 				if(req.body.input.communities != ''){
 					node_query += " OR";
@@ -164,6 +185,9 @@ app.post('/api/findObject' , (req , res) => {
 			}
 
 		}
+		//order by the votes
+		node_query += 'ORDER BY votes DESC';
+		rel_query += 'ORDER BY votes DESC';
 		console.log(node_query.concat(rel_query));
 		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
 			connection.release();
@@ -371,10 +395,10 @@ app.post('/api/voteNode' , (req , res) => {
 		const prev_date_esc = connection.escape(prev_date);
 		let upOrDown = "";
 		if(req.body.input.vote == true){
-			upOrDown = "thumbs = thumbs + 1";	
+			upOrDown = "votes = votes + 1";	
 		}
 		else{
-			upOrDown = "thumbs = thumbs - 1";
+			upOrDown = "votes = votes - 1";
 		}
 		let query =
 
@@ -384,7 +408,6 @@ app.post('/api/voteNode' , (req , res) => {
                         " Date > " +  prev_date_esc + " AND" +
                         " Date <= " +  date_esc + " AND" +
                         " node_id = " + id_esc;
-		console.log(query);
 		connection.query(query, (errQ,result,fields)=>{
 			connection.release();
 		
@@ -456,10 +479,10 @@ app.post('/api/voteRel' , (req , res) => {
 
 		let upOrDown = "";
 		if(req.body.input.vote == true){
-			upOrDown = "thumbs = thumbs + 1";	
+			upOrDown = "votes = votes + 1";	
 		}
 		else{
-			upOrDown = "thumbs = thumbs - 1";
+			upOrDown = "votes = votes - 1";
 		}
 		let query =
 			"UPDATE rel_rating" +
