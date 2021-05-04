@@ -39,6 +39,20 @@ function App() {
     const [currentPageIndex , setCurrentPageIndex]          = useState(0);
     const [data , setData]                                  = useState({nodes:[] , links:[]});
     const [graphDate , setGraphDate]                        = useState(undefined);
+
+    const [neighborhoodSettings , setNeighborhoodSettings]  = useState({
+        id: -1 ,
+        date: '' ,
+        depth: -1
+    });
+
+    const [findObjectSettings , setFindObjectSettings]      = useState({
+        communities: [] ,
+        keywords: []
+    });
+
+    const [graphDates , setGraphDates]                      = useState([]);
+
     const [graphFilters , setGraphFilters]                  = useState({
         nodes: '' ,
         communities: '' ,
@@ -58,8 +72,68 @@ function App() {
         .then(res => res.text())
         .then(text => console.log(text));
 
-        fetchGraph();
+        const fetchLatestGraph = async () => {
+            const dates = await fetchDates();
+            const datesArray = dates.dates;
+            console.log(dates.dates);
+
+            console.log('fetch neigh')
+            const subgraph = await fetchNeighborhood({
+                id: 1 ,
+                date: datesArray[datesArray.length - 1] ,
+                depth: -1
+            });
+            console.log(subgraph);
+        }
+
+        fetchLatestGraph();
+
+        // fetchGraph();
+        
+
+        // fetchDates().then((dates) => {
+        //     console.log(dates);
+
+        //     return dates[dates.length - 1];
+        // })
+        // .then((date) => {
+        //     setNeighborhoodSettings({
+        //         id: -1 ,
+        //         date: date ,
+        //         depth: -1
+        //     });
+
+        //     fetchNeighborhood()
+        // });
     } , [])
+
+
+    async function fetchDates() {
+        const response = await fetch('./api/graphDates' , 
+            {
+                method: 'POST'
+            });
+        
+        const dates = await response.json();
+        return dates;
+    }
+
+
+    async function fetchNeighborhood(settings) {
+        console.log(settings);
+        
+        const response = await fetch('./api/neighborhood' , 
+            {
+                method: 'POST' , 
+                headers: {
+                    'Content-Type': 'application/json'
+                } ,
+                body: JSON.stringify({input: settings})
+            });
+
+        const subgraph = await response.json();
+        return subgraph;
+    }
 
 
     function fetchGraph() {

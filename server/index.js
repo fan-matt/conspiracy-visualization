@@ -10,10 +10,8 @@ const port  = 5000;
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host:'127.0.0.1',
-	user:'nodeApp',
-	password: '18dkniuiaookjs',//'18dkniuia%',
-
-
+	user:'elee',
+	password: 'password',
 	database:'MAINDB',
 	multipleStatements:true
 }); 
@@ -58,7 +56,8 @@ app.post('/api/graphDates' , (req , res) => {
 	 * */
 	pool.getConnection( (err,connection)=>{
 		if(err) {
-			defError(res, err);
+			// defError(res, err);
+			console.log(err);
 			return;
 		}
 
@@ -71,7 +70,7 @@ app.post('/api/graphDates' , (req , res) => {
 			}
 			else{
 				let json_object = {};
-				const field1 = "Date";	
+				const field1 = "dates";	
 				json_object[field1] = [];
 
 				for(const tuple of result){
@@ -242,7 +241,11 @@ app.post('/api/neighborhood' , (req , res) => {
 	   req.body.input.id == undefined || 
 	   req.body.input.date == undefined ||
 	   req.body.input.depth == undefined){
-		InvOrMissingParams(res);
+
+		console.log(req);
+		// console.log(res);
+		console.log(req.body);
+		// InvOrMissingParams(res);
 		return;
 	}
 	
@@ -260,7 +263,8 @@ app.post('/api/neighborhood' , (req , res) => {
 		
 	pool.getConnection( (err,connection)=>{
 		if(err) {
-			defError(res,err);
+			// defError(res,err);
+			console.log(err);
 			return;
 		}
 		let depth = req.body.input.depth;
@@ -273,8 +277,7 @@ app.post('/api/neighborhood' , (req , res) => {
 		const id_esc = connection.escape(req.body.input.id);
 		const depth_esc = connection.escape(depth);
 		const date_esc = connection.escape(node_date);
-		const prev_date_esc = connection.escape(prev_date);	
-		
+		const prev_date_esc = connection.escape(prev_date);
 		let query = 
 			" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
                                 " (rel_id INT," +
