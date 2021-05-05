@@ -2,9 +2,9 @@ const axios = require('axios');
 
 axios.post('http://localhost:5000/api/neighborhood', {
 	input:{
-		id: -1,	
-		date: '2020-01-01T08:00:00.000Z',	
-		depth: -1
+		id: 2,	
+		date: '2018-01-01T08:00:00.000Z',	
+		depth: 0
 	}
 })
 .then(res =>{
