@@ -268,7 +268,7 @@ app.post('/api/neighborhood' , (req , res) => {
 			return;
 		}
 		let depth = req.body.input.depth;
-		if(depth = -1){
+		if(depth == -1){
 			depth = 100;
 		}else if(depth < -1){
 			InvOrMissingParams(res);
@@ -292,20 +292,21 @@ app.post('/api/neighborhood' , (req , res) => {
 		}else{
 			query = 
 				" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
-					" (rel_id INT," +
+					" (n INT," + 
+					" rel_id INT," +
 					" obj1 INT," +
 					" obj2 INT," +
 					" Date date);"; 			
 			query +=
-				" SET SESSION cte_max_recursion_depth = " + depth_esc + ";" +//set max depth 
+				" SET SESSION cte_max_recursion_depth = 100;"+
 				" INSERT INTO rel_recurse" + //insert the values
-				" WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
-				" ((SELECT -1 AS rel_id, " +
+				" WITH RECURSIVE CN(n, rel_id, obj1, obj2, Date) AS" +
+				" ((SELECT 0 AS n, -1 AS rel_id, " +
 					id_esc + " AS obj1, " +
 					id_esc + " AS obj2, " +
 					"20200101 AS Date)" +
 				" UNION" +
-				"(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
+				"(SELECT n+1,R.rel_id, R.obj1, R.obj2, R.Date" +
 				" FROM relationships R, CN " +
 				" WHERE" +
 				" (CN.obj1 = R.obj1 OR" +
@@ -313,7 +314,8 @@ app.post('/api/neighborhood' , (req , res) => {
 				" CN.obj1 = R.obj2 OR" +
 				" CN.obj2 = R.obj2) AND" +
 				" R.Date > " + prev_date_esc +" AND" +
-				" R.Date <= " + date_esc + " )) SELECT * FROM CN" +  
+				" R.Date <= " + date_esc + " AND" + 
+				" n < " + depth_esc+ ")) SELECT * FROM CN" +  
 				" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
 				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
 				" WHERE nodes.Date >" + prev_date_esc + " AND" + 
@@ -339,6 +341,7 @@ app.post('/api/neighborhood' , (req , res) => {
 			connection.destroy();
 		
 			if(errQ){
+				console.log("here");
 				defError(res,errQ);
 				return;
 			}
