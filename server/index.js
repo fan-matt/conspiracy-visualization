@@ -106,6 +106,7 @@ app.post('/api/findObject' , (req , res) => {
 	//check for all parameters
 	if(req.body.input == undefined || req.body.input.communities == undefined || req.body.input.keywords == undefined){
 		InvOrMissingParams(res);
+		console.log(req.body)
 		return;
 	}
 	//check parameters are of correct type
@@ -113,6 +114,7 @@ app.post('/api/findObject' , (req , res) => {
 	for(const communityID of req.body.input.communities){
 		if(typeof communityID != "number"){
 			InvOrMissingParams(res);
+			console.log('asdfasfasdfas');
 			return;
 		}
 	}
@@ -187,12 +189,13 @@ app.post('/api/findObject' , (req , res) => {
 		//order by the votes
 		node_query += 'ORDER BY votes DESC';
 		rel_query += 'ORDER BY votes DESC';
-		console.log(node_query.concat(rel_query));
+		// console.log(node_query.concat(rel_query));
 		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
 			connection.release();
 			
 			if(errQ){
 				res.json({'Error':errQ.code});
+				console.log(errQ)
 			}
 			else{
 				let json_object = {};
@@ -241,11 +244,7 @@ app.post('/api/neighborhood' , (req , res) => {
 	   req.body.input.id == undefined || 
 	   req.body.input.date == undefined ||
 	   req.body.input.depth == undefined){
-
-		console.log(req);
-		// console.log(res);
-		console.log(req.body);
-		// InvOrMissingParams(res);
+		InvOrMissingParams(res);
 		return;
 	}
 	
@@ -263,13 +262,12 @@ app.post('/api/neighborhood' , (req , res) => {
 		
 	pool.getConnection( (err,connection)=>{
 		if(err) {
-			// defError(res,err);
-			console.log(err);
+			defError(res,err);
 			return;
 		}
 		let depth = req.body.input.depth;
 		if(depth == -1){
-			depth = 100;
+			depth = 20;
 		}else if(depth < -1){
 			InvOrMissingParams(res);
 			return;
@@ -343,6 +341,7 @@ app.post('/api/neighborhood' , (req , res) => {
 			if(errQ){
 				console.log("here");
 				defError(res,errQ);
+				console.log(errQ);
 				return;
 			}
 			else{

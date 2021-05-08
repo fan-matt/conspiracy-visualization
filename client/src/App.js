@@ -1,5 +1,6 @@
 import React , {useState , useEffect} from 'react';
 import styled from 'styled-components';
+import { Map } from 'immutable';
 
 import MainLayout from './layouts/MainLayout';
 import GraphViewer from './components/GraphViewer';
@@ -8,10 +9,7 @@ import GraphSwitchMenu from './components/GraphSwitchMenu';
 import Footer from './components/Footer';
 
 import { formatDate } from './util/util';
-
-import DataLoader from './util/DataLoader';
-
-import Data from './data/data.json';
+import { nodeModuleNameResolver } from 'typescript';
 
 
 /*
@@ -40,22 +38,17 @@ function App() {
     const [data , setData]                                  = useState({nodes:[] , links:[]});
     const [graphDate , setGraphDate]                        = useState(undefined);
 
-    const [neighborhoodSettings , setNeighborhoodSettings]  = useState({
-        id: -1 ,
-        date: '' ,
-        depth: -1
-    });
+    const [searchedObjects , setSearchedObjects]            = useState({nodes:[] , links:[]});
 
-    const [findObjectSettings , setFindObjectSettings]      = useState({
-        communities: [] ,
-        keywords: []
-    });
+    const [neighborhoodSettings , setNeighborhoodSettings]  = useState(Map({id: -1 , date: '' , depth: -1}));
+
+    const [findObjectSettings , setFindObjectSettings]      = useState(Map({communities: [] , keywords: []}));
 
     const [graphDates , setGraphDates]                      = useState([]);
 
     const [graphFilters , setGraphFilters]                  = useState({
-        nodes: '' ,
-        communities: '' ,
+        keywords: [] ,
+        communities: [] ,
     });
 
 
@@ -75,36 +68,28 @@ function App() {
         const fetchLatestGraph = async () => {
             const dates = await fetchDates();
             const datesArray = dates.dates;
-            console.log(dates.dates);
+            const latestDate = datesArray[datesArray.length - 1];
 
-            console.log('fetch neigh')
+            setGraphDate(formatDate(latestDate));
+
+            console.log('latest date');
+            console.log(latestDate);
+
+            setNeighborhoodSettings(neighborhoodSettings.set('date' , latestDate));
+
+            console.log('neighborhood settings state');
+            console.log(neighborhoodSettings.toObject());
+
             const subgraph = await fetchNeighborhood({
                 id: 1 ,
                 date: datesArray[datesArray.length - 1] ,
-                depth: -1
+                depth: 20
             });
-            console.log(subgraph);
+
+            setData(processGraph(subgraph));
         }
 
         fetchLatestGraph();
-
-        // fetchGraph();
-        
-
-        // fetchDates().then((dates) => {
-        //     console.log(dates);
-
-        //     return dates[dates.length - 1];
-        // })
-        // .then((date) => {
-        //     setNeighborhoodSettings({
-        //         id: -1 ,
-        //         date: date ,
-        //         depth: -1
-        //     });
-
-        //     fetchNeighborhood()
-        // });
     } , [])
 
 
@@ -120,8 +105,9 @@ function App() {
 
 
     async function fetchNeighborhood(settings) {
-        console.log(settings);
-        
+        console.log('in fetchNeighborhood');
+        console.log(neighborhoodSettings.toObject());
+
         const response = await fetch('./api/neighborhood' , 
             {
                 method: 'POST' , 
@@ -136,89 +122,76 @@ function App() {
     }
 
 
-    function fetchGraph() {
-        fetch('./api/graphDates')
-        .then(res => res.json())
-        .then(dateJson => {
-            let dates = dateJson.Date;
-            let mostRecent = dates[dates.length - 1];
+    async function fetchObjects(settings) {
+        const response = await fetch('./api/findObject' ,
+            {
+                method: 'POST' ,
+                headers: {
+                    'Content-Type': 'application/json'
+                } ,
+                body: JSON.stringify({input: settings})
+            }
+        )
 
-            fetch('./api/graph?' + new URLSearchParams({
-                date: mostRecent
-            }))
-            .then(res => res.json())
-            .then(graphJson => {
-                console.log('RAW JSON');
-                console.log(graphJson);
-
-                // Process data
-
-                // Set id field and source/target
-                let nodes = graphJson.nodes;
-                let links = graphJson.links;
-
-                nodes.forEach(node => {
-                    node.id = node.node_id;
-                    delete node.node_id;
-
-                    node.neighbors = [];
-                    node.links = [];
-                });
-
-                links.forEach(link => {
-                    link.id = link.rel_id;
-                    delete link.rel_id;
-
-                    link.source = nodes.find(node => node.graph_id === link.graph_id && node.id === link.obj1);
-                    link.target = nodes.find(node => node.graph_id === link.graph_id && node.id === link.obj2);
-
-                    link.source.neighbors.push(link.target);
-                    link.source.links.push(link);
-                    
-                    if(link.source !== link.target) {
-                        link.target.neighbors.push(link.source);
-                        link.target.links.push(link);
-                    } else {
-                        link.curvature = 3;
-                    }
-                });
-
-                
-                
-
-                // Filter
-                if(graphFilters.communities !== '') {
-                    let communityFilter = graphFilters.communities.split(';');
-                    graphJson.nodes = graphJson.nodes.filter(node => communityFilter.includes(String(node.community)));
-                }
-
-                if(graphFilters.nodes !== '') {
-                    let nodeFilter = graphFilters.nodes.split(';');
-
-                    console.log(nodeFilter);
-
-                    graphJson.nodes = graphJson.nodes.filter(node => {
-                        let found = false;
-                        
-                        nodeFilter.forEach(searchNode => {
-                            found = found || (String(node.node).search(searchNode) !== -1);
-                        });
-
-                        return found;
-                    });
-                }
+        const objects = await response.json();
+        return objects;
+    }
 
 
-                // Prune neighborless nodes
-                graphJson.nodes = graphJson.nodes.filter(node => node.neighbors.length > 0);
+    function processGraph(graphJson) {
+        // Set id field and source/target
+        let nodes = graphJson.nodes;
+        let links = graphJson.links;
 
+        nodes.forEach(node => {
+            node.id = node.node_id;
+            delete node.node_id;
 
-                console.log('FIXED JSON')
-                console.log(graphJson);
-                setData(graphJson);
-                setGraphDate(formatDate(mostRecent));
-            })
+            node.neighbors = [];
+            node.links = [];
         });
+
+        links.forEach(link => {
+            link.id = link.rel_id;
+            delete link.rel_id;
+
+            link.source = nodes.find(node => node.id === link.obj1);
+            link.target = nodes.find(node => node.id === link.obj2);
+
+            if(link.source && link.target) {
+                link.source.neighbors.push(link.target);
+                link.source.links.push(link);
+                
+                if(link.source !== link.target) {
+                    link.target.neighbors.push(link.source);
+                    link.target.links.push(link);
+                } else {
+                    link.curvature = 3;
+                }
+            }
+        });
+
+        return {nodes: nodes , links: links};
+    }
+
+
+    async function updateSubgraph(settings , focus) {
+        console.log('settings');
+        console.log(settings)
+
+
+        const subgraph = await fetchNeighborhood(settings);
+        const processedSubgraph = processGraph(subgraph);
+        console.log('Request data');
+        console.log(subgraph);
+
+        setData(processedSubgraph);
+
+        setGraphDate(formatDate(settings.date));
+
+        if(focus) {
+            setCurrentNode(processedSubgraph.nodes.find((node) => node.id === focus));
+        }
     }
 
 
@@ -264,11 +237,73 @@ function App() {
     }
 
 
-    function filterGraph() {
-        console.log('filter function!');
+    async function filterGraph() {
+        console.log('graphFilters');
         console.log(graphFilters);
 
-        fetchGraph();
+        let newFilter = Object.assign({} , graphFilters);
+        newFilter.keywords = graphFilters.keywords.split(';');
+
+        const objects = await fetchObjects(newFilter);
+        setSearchedObjects(objects);
+        console.log(searchedObjects);
+        // fetchGraph();
+    }
+
+
+    function communityMembers(node) {
+        return data.nodes.filter(n => n.community === node.community);
+    }
+
+
+    async function voteNode(node , vote) {
+        const max_neighbors = 20;
+        const neighbors = node.links.length;   // Yes yes this is sloppy (and incorrect) but it's "correct enough"
+
+        const neighborLimit = Math.min(max_neighbors , neighbors);
+
+        for(let i = 0; i < neighborLimit; i ++) {
+            let link = node.links[i];
+            let neighbor = (node.id === link.source.id) ? link.target : link.source;
+
+            const payload = {
+                id: neighbor.id ,
+                date: neighbor.Date ,
+                vote: vote
+            }
+    
+            console.log('payload');
+            console.log(payload);
+            console.log(node);
+    
+            await fetch('./api/voteNode' ,
+                {
+                    method: 'POST' ,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    } ,
+                    body: JSON.stringify({input: payload})
+                }
+            )
+
+            const linkPayload = {
+                id: link.id ,
+                date: link.Date ,
+                sourceId: link.obj1 ,
+                targetId: link.obj2 ,
+                vote: vote
+            }
+
+            await fetch('./api/voteRel' ,
+                {
+                    method: 'POST' ,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    } ,
+                    body: JSON.stringify({input: linkPayload})
+                }
+            )
+        }
     }
 
 
@@ -289,9 +324,17 @@ function App() {
                             pageIndex={currentPageIndex} 
                             onIndexChange={onPageChange} 
                             currentNode={currentNode}
+                            setCurrentNode={(node) => {
+                                    setCurrentNode(node);
+                                }
+                            }
+                            communityMembers={communityMembers}
                             filters={graphFilters}    
                             setFilters={setGraphFilter}
                             filter={filterGraph}
+                            searchedNodes={searchedObjects.nodes}
+                            updateSubgraph={updateSubgraph}
+                            voteNode={voteNode}
                         />
                         <Footer />
                     </MenuAndFooter>

@@ -25,6 +25,19 @@ function GraphViewer(props) {
 
 
     useEffect(() => {
+        graphRef.current.zoom(0.2 , 0);
+    } , []);
+
+
+    useEffect(() => {
+        if(props.currentNode) {
+            graphRef.current.centerAt(props.currentNode.x , props.currentNode.y , 1000);
+            graphRef.current.zoom(0.25 , 1000);
+        }
+    } , [props.currentNode])
+
+
+    useEffect(() => {
         setForces();
         // graphRef.current.d3ReheatSimulation();
       }, [props.data]);
@@ -47,12 +60,12 @@ function GraphViewer(props) {
 
         // Cap the many body (aka charge) force
         // Without this, it reaches too far and starts to push stray nodes very far away
-        const MAX_DIST = 1200;
+        const MAX_DIST = 700;
         let chargeForce = graphRef.current.d3Force('charge');
         chargeForce.distanceMax(MAX_DIST);
         // chargeForce.strength(Math.min(numNodes / MAX_NODES , 1) * (Math.min(numNodes / MAX_NODES , 1) * (-50 + 50) - 50));
         // chargeForce.strength(Math.min(numNodes / MAX_NODES , 1) * (Math.min(numNodes / MAX_NODES , 1) * -80));
-        chargeForce.strength(-80);
+        chargeForce.strength(-300);
         graphRef.current.d3Force('charge' , chargeForce);
 
         let strengthForce = graphRef.current.d3Force('center');
@@ -68,17 +81,19 @@ function GraphViewer(props) {
 
             let nodes = props.data.nodes;
 
-            // Don't use Array.prototype.find since it returns the value and not the actual node
-            let sourceNode = nodes[nodes.findIndex(node => String(node.id) === source)];
-            let targetNode = nodes[nodes.findIndex(node => String(node.id) === target)];
-            
-            if(sourceNode && targetNode) {
-                return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * (Math.min(numNodes / MAX_NODES , 1) * (0.05 - 0.025) + 0.025);
-                // return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * 0.025;
-            } else {
-                // This is necessary- it prevents the graph from trying to find source/target nodes that no longer exist 
-                // It can be any value, just has to be something
-                return 1;
+            if(source && target) {
+                // Don't use Array.prototype.find since it returns the value and not the actual node
+                let sourceNode = nodes[nodes.findIndex(node => String(node.id) === source)];
+                let targetNode = nodes[nodes.findIndex(node => String(node.id) === target)];
+                
+                if(sourceNode && targetNode) {
+                    // return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * (Math.min(numNodes / MAX_NODES , 1) * (0.05 - 0.025) + 0.025);
+                    return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * 0.015;
+                } else {
+                    // This is necessary- it prevents the graph from trying to find source/target nodes that no longer exist 
+                    // It can be any value, just has to be something
+                    return 1;
+                }
             }
         });
         graphRef.current.d3Force('link' , linkForce);
@@ -88,7 +103,7 @@ function GraphViewer(props) {
 
     function handleNodeClick(node , e) {
         graphRef.current.centerAt(node.x , node.y , 1000);
-        graphRef.current.zoom(0.75 , 1000);
+        graphRef.current.zoom(0.25 , 1000);
 
         // Callback
         if(props.onNodeClick) {
@@ -184,8 +199,6 @@ function GraphViewer(props) {
 
 
     function deactivateForces() {
-        console.log('stop!!!!!!');
-
         // Don't just set forces to null! This breaks hot reload and maybe other things
         function zeroForce(forceName) {
             let force = graphRef.current.d3Force(forceName);
@@ -210,7 +223,7 @@ function GraphViewer(props) {
 
     function handleNodeSize(node) {
         const MIN_SIZE = 36;
-        const MAX_SIZE = 48;
+        const MAX_SIZE = 72;
         const MAX_NEIGHBORS = 5;
 
         let numNeighbors = node.neighbors.length;
@@ -219,6 +232,13 @@ function GraphViewer(props) {
 
         return NODE_SIZE;
     }
+
+
+    function fixNode(node) {
+        node.fx = node.x;
+        node.fy = node.y;
+    }
+
 
 
     return(
@@ -237,6 +257,7 @@ function GraphViewer(props) {
                 nodeLabel='node'
                 nodeCanvasObject={(node , ctx) => paintNode(node , undefined , ctx)}
                 nodePointerAreaPaint={paintNode}
+                onNodeDragEnd={(node) => fixNode(node)}
 
                 onLinkHover={handleLinkHover}
                 linkDirectionalArrowLength={link => highlightLinks.includes(link) ? 0 : 5}
@@ -251,9 +272,9 @@ function GraphViewer(props) {
                 onBackgroundClick={handleBackgroundClick}
 
                 d3AlphaDecay={0.03}
-                d3VelocityDecay={0.05}
-                cooldownTime={3000}
-                onEngineStop={deactivateForces}
+                d3VelocityDecay={0.04}
+                cooldownTime={4500}
+                // onEngineStop={deactivateForces}
             />
         </div>
     );
