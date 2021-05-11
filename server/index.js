@@ -187,8 +187,8 @@ app.post('/api/findObject' , (req , res) => {
 
 		}
 		//order by the votes
-		node_query += 'ORDER BY votes DESC';
-		rel_query += 'ORDER BY votes DESC';
+		node_query += 'ORDER BY nodes.Date DESC, votes DESC';
+		rel_query += 'ORDER BY relationships.Date DESC, votes DESC';
 		// console.log(node_query.concat(rel_query));
 		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
 			connection.release();
