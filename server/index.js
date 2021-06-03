@@ -187,8 +187,8 @@ app.post('/api/findObject' , (req , res) => {
 
 		}
 		//order by the votes
-		node_query += 'ORDER BY votes DESC';
-		rel_query += 'ORDER BY votes DESC';
+		node_query += 'ORDER BY nodes.Date DESC, votes DESC';
+		rel_query += 'ORDER BY relationships.Date DESC, votes DESC';
 		// console.log(node_query.concat(rel_query));
 		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
 			connection.release();
@@ -386,6 +386,7 @@ app.post('/api/voteNode' , (req , res) => {
 	   req.body.input.id == undefined ||
 	   req.body.input.date == undefined ||
 	   req.body.input.vote == undefined){
+		console.log("hello");
 		InvOrMissingParams(res);
 		return;	
 	}
@@ -395,6 +396,7 @@ app.post('/api/voteNode' , (req , res) => {
 	if((typeof req.body.input.id != "number") ||
 	   (node_date == "Invalid Date") ||
 	   (typeof req.body.input.vote != "boolean")){
+		console.log("world");
 		InvOrMissingParams(res);
 		return;
 	}
@@ -423,7 +425,7 @@ app.post('/api/voteNode' , (req , res) => {
 		let query =
 
  			"UPDATE node_rating" +
-                        " SET " + upOrDown +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" + 
                         " WHERE " +
                         " Date > " +  prev_date_esc + " AND" +
                         " Date <= " +  date_esc + " AND" +
@@ -506,7 +508,7 @@ app.post('/api/voteRel' , (req , res) => {
 		}
 		let query =
 			"UPDATE rel_rating" +
-                        " SET " + upOrDown +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" +
                         " WHERE" +
                         " Date > " +  prev_date_esc + " AND" +
                         " Date <= " +  date_esc + " AND" +
