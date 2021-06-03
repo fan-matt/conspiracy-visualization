@@ -69,7 +69,7 @@ function GraphViewer(props) {
         graphRef.current.d3Force('charge' , chargeForce);
 
         let strengthForce = graphRef.current.d3Force('center');
-        strengthForce.strength(1);
+        strengthForce.strength(0);
         graphRef.current.d3Force('center' , strengthForce);
 
     

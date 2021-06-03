@@ -266,8 +266,8 @@ app.post('/api/neighborhood' , (req , res) => {
 			return;
 		}
 		let depth = req.body.input.depth;
-		if(depth == -1){
-			depth = 20;
+		if(depth == -1 || depth >= 4){
+			depth = 4;
 		}else if(depth < -1){
 			InvOrMissingParams(res);
 			return;

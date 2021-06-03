@@ -101,7 +101,7 @@ const CommunityMember = styled.div`
         node - a node object to display information about
 */
 export default function NodeDataPage(props) {
-    const [searchDepth , setSearchDepth] = useState(-1);
+    const [searchDepth , setSearchDepth] = useState(4);
     const [showRelations , setShowRelations] = useState(false);
     const [showCommunity , setShowCommunity] = useState(false);
 
@@ -152,9 +152,22 @@ export default function NodeDataPage(props) {
         );
     }
     else {
-        console.log('color');
-        console.log(props.node.color);
-        console.log(props.node);
+        let communityName = (members) => {
+            let maxNeighbors = -1;
+            let name = '';
+
+            console.log('members');
+            console.log(members);
+
+            members.forEach(member => {
+                if(member.neighbors.length >= maxNeighbors) {
+                    maxNeighbors = member.neighbors.length;
+                    name = member.node;
+                }
+            });
+
+            return name;
+        }
 
         pageContent = (
             <React.Fragment>
@@ -163,7 +176,7 @@ export default function NodeDataPage(props) {
 
                 <h2> Community: </h2>
                 <h3 style={{display: 'flex' , alignItems: 'center'}}> 
-                    {props.node.community === -1 ? 'None' : props.node.community} <IndicatorDot color={props.node.color} size='20px' /> 
+                    {props.node.community === -1 ? 'None' : `(${communityName(props.communityMembers(props.node))}) ${props.node.community}`} <IndicatorDot color={props.node.color} size='20px' /> 
                 </h3>
 
                 <h2> Community Members: ({cMembers.length}) </h2> 

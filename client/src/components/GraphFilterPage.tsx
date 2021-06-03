@@ -61,7 +61,24 @@ type Props = {
 
 
 const GraphFilterPage: FC<Props> = (props) => {
-    let searchResults = props.searchedNodes.map((node) => {
+
+    let searchedNodes = props.searchedNodes.slice();
+
+    searchedNodes.sort((a , b) => {
+        const dateA = new Date(a.Date);
+        const dateB = new Date(b.Date);
+
+        return dateA.valueOf() - dateB.valueOf();
+    }).reverse();
+
+    if(searchedNodes.length >= 80) {
+        searchedNodes.length = 80;
+    }
+
+    console.log('searched nodes');
+    console.log(searchedNodes);
+
+    let searchResults = searchedNodes.map((node) => {
         return(
             <StyledSearch onClick={() => {
                 props.updateSubgraph({

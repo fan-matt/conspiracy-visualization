@@ -47,19 +47,19 @@ type Props = {
 */
 const GraphSwitchMenu: FC <Props> = (props) => {
     let pages = [
-        <NodeDataPage 
-            node={props.currentNode} 
-            updateNode={props.setCurrentNode} 
-            updateSubgraph={props.updateSubgraph} 
-            communityMembers={props.communityMembers} 
-            voteNode={props.voteNode}
-        /> ,
         <GraphFilterPage 
             filters={props.filters} 
             setFilters={props.setFilters} 
             filter={props.filter} 
             searchedNodes={props.searchedNodes} 
             updateSubgraph={props.updateSubgraph} 
+        /> ,
+        <NodeDataPage 
+            node={props.currentNode} 
+            updateNode={props.setCurrentNode} 
+            updateSubgraph={props.updateSubgraph} 
+            communityMembers={props.communityMembers} 
+            voteNode={props.voteNode}
         /> ,
         <GraphSettingsPage />
     ];
@@ -71,8 +71,8 @@ const GraphSwitchMenu: FC <Props> = (props) => {
     // ];
 
     let icons = [
-        <IconText> Details </IconText> ,
         <IconText> Filter </IconText> ,
+        <IconText> Details </IconText> ,
         <IconText> Settings </IconText>
     ]
 
