@@ -23,39 +23,87 @@ function GraphViewer(props) {
 
     const graphRef = useRef(null);
 
-    // This runs exactly once after rendering for the first time
+
     useEffect(() => {
-        // Cap the many body (aka charge) force
-        // Without this, it reaches too far and starts to push stray nodes very far away
-        const MAX_DIST = 1500;
-        let chargeForce = graphRef.current.d3Force('charge');
-        chargeForce.distanceMax(MAX_DIST);
-        graphRef.current.d3Force('charge' , chargeForce);
-
-        // Make the link forces a bit weaker to push out the nodes
-        let linkForce = graphRef.current.d3Force('link');
-        let strengthAccessor = linkForce.strength();
-        linkForce.strength((link) => {
-            let defaultForce = strengthAccessor(link);
-            return 0.025 * defaultForce;
-        });
-        graphRef.current.d3Force('link' , linkForce);
-      }, []);
+        graphRef.current.zoom(0.2 , 0);
+    } , []);
 
 
-      useEffect(() => {
+    useEffect(() => {
+        if(props.currentNode) {
+            graphRef.current.centerAt(props.currentNode.x , props.currentNode.y , 1000);
+            graphRef.current.zoom(0.25 , 1000);
+        }
+    } , [props.currentNode])
+
+
+    useEffect(() => {
+        setForces();
+        // graphRef.current.d3ReheatSimulation();
+      }, [props.data]);
+
+
+    useEffect(() => {
         if(props.currentNode) {
             highlightNodeNeighbors(props.currentNode);
         } else {
-            setHighlightLinks([]);
-            setHighlightNodes([]);
+            // setHighlightLinks([]);
+            // setHighlightNodes([]);
         }
-      } , [props.currentNode]);
+    } , [props.currentNode]);
 
     
+    function setForces() {
+        const MAX_NODES = 1100;
+        let numNodes = props.data.nodes.length;
+
+
+        // Cap the many body (aka charge) force
+        // Without this, it reaches too far and starts to push stray nodes very far away
+        const MAX_DIST = 700;
+        let chargeForce = graphRef.current.d3Force('charge');
+        chargeForce.distanceMax(MAX_DIST);
+        // chargeForce.strength(Math.min(numNodes / MAX_NODES , 1) * (Math.min(numNodes / MAX_NODES , 1) * (-50 + 50) - 50));
+        // chargeForce.strength(Math.min(numNodes / MAX_NODES , 1) * (Math.min(numNodes / MAX_NODES , 1) * -80));
+        chargeForce.strength(-300);
+        graphRef.current.d3Force('charge' , chargeForce);
+
+        let strengthForce = graphRef.current.d3Force('center');
+        strengthForce.strength(0);
+        graphRef.current.d3Force('center' , strengthForce);
+
+    
+        // Make the link forces a bit weaker to push out the nodes
+        let linkForce = graphRef.current.d3Force('link');
+        linkForce.strength((link) => {
+            let source = String(link.source.id);
+            let target = String(link.target.id);
+
+            let nodes = props.data.nodes;
+
+            if(source && target) {
+                // Don't use Array.prototype.find since it returns the value and not the actual node
+                let sourceNode = nodes[nodes.findIndex(node => String(node.id) === source)];
+                let targetNode = nodes[nodes.findIndex(node => String(node.id) === target)];
+                
+                if(sourceNode && targetNode) {
+                    // return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * (Math.min(numNodes / MAX_NODES , 1) * (0.05 - 0.025) + 0.025);
+                    return 1 / Math.min(sourceNode.neighbors.length , targetNode.neighbors.length) * 0.015;
+                } else {
+                    // This is necessary- it prevents the graph from trying to find source/target nodes that no longer exist 
+                    // It can be any value, just has to be something
+                    return 1;
+                }
+            }
+        });
+        graphRef.current.d3Force('link' , linkForce);
+    }
+
+
+
     function handleNodeClick(node , e) {
         graphRef.current.centerAt(node.x , node.y , 1000);
-        graphRef.current.zoom(0.75 , 1000);
+        graphRef.current.zoom(0.25 , 1000);
 
         // Callback
         if(props.onNodeClick) {
@@ -113,34 +161,38 @@ function GraphViewer(props) {
 
 
     function handleNodeHover(node) {
-        if(props.currentNode) {
-            highlightNodeNeighbors(props.currentNode);
-        } else {
+        if(!props.currentNode) {
             highlightNodeNeighbors(node);
         }
     }
 
 
     function handleLinkHover(link) {
-        if(props.currentNode) {
-            highlightNodeNeighbors(props.currentNode);
-        } else {
+        if(!props.currentNode) {
             highlightLinkNeighbors(link);
         }
     }
 
 
     function paintNode(node , color , ctx) {
+        const NODE_SIZE = handleNodeSize(node);
+
+        ctx.beginPath();
+        ctx.arc(node.x , node.y , NODE_SIZE * 1.1 , 0 , 2 * Math.PI , false);
+        ctx.fillStyle = 'black';
+        ctx.fill();
+
+
         // add ring just for highlighted nodes
         if(highlightNodes.includes(node)) {
             ctx.beginPath();
-            ctx.arc(node.x, node.y, handleNodeSize(node) * 1.4, 0, 2 * Math.PI, false);
+            ctx.arc(node.x , node.y , NODE_SIZE * 1.4 , 0 , 2 * Math.PI , false);
             ctx.fillStyle = (node === hoveredNode) ? NODE_HIGHLIGHT_HOVER : NODE_HIGHLIGHT_ADJACENT;
             ctx.fill();
         }
 
         ctx.beginPath();
-        ctx.arc(node.x, node.y, handleNodeSize(node), 0, 2 * Math.PI, false);
+        ctx.arc(node.x , node.y , NODE_SIZE , 0 , 2 * Math.PI , false);
         ctx.fillStyle = (color) ? color : node.color;
         ctx.fill();
     }
@@ -163,12 +215,15 @@ function GraphViewer(props) {
     function handleBackgroundClick() {
         graphRef.current.zoomToFit(750 , 50);
         props.onNodeClick(null);
+
+        setHighlightNodes([]);
+        setHighlightLinks([]);
     }
 
 
     function handleNodeSize(node) {
-        const MIN_SIZE = 24;
-        const MAX_SIZE = 35;
+        const MIN_SIZE = 36;
+        const MAX_SIZE = 72;
         const MAX_NEIGHBORS = 5;
 
         let numNeighbors = node.neighbors.length;
@@ -177,6 +232,13 @@ function GraphViewer(props) {
 
         return NODE_SIZE;
     }
+
+
+    function fixNode(node) {
+        node.fx = node.x;
+        node.fy = node.y;
+    }
+
 
 
     return(
@@ -191,13 +253,11 @@ function GraphViewer(props) {
 
                 onNodeClick={handleNodeClick}
                 onNodeHover={handleNodeHover}
-                onNodeDragEnd={handleNodeDragEnd}
-                nodeAutoColorBy={(node) => node.community}
-                nodeLabel={(node) => node.node}
-                // nodeRelSize={(node) => handleNodeSize(node)}
-                // nodeCanvasObjectMode={node => highlightNodes.includes(node) ? 'before' : undefined}
+                nodeAutoColorBy='community'
+                nodeLabel='node'
                 nodeCanvasObject={(node , ctx) => paintNode(node , undefined , ctx)}
                 nodePointerAreaPaint={paintNode}
+                onNodeDragEnd={(node) => fixNode(node)}
 
                 onLinkHover={handleLinkHover}
                 linkDirectionalArrowLength={link => highlightLinks.includes(link) ? 0 : 5}
@@ -211,10 +271,10 @@ function GraphViewer(props) {
 
                 onBackgroundClick={handleBackgroundClick}
 
-                d3AlphaDecay={0.06}
-                d3VelocityDecay={0.1}
-                cooldownTime={3000}
-                onEngineStop={deactivateForces}
+                d3AlphaDecay={0.03}
+                d3VelocityDecay={0.04}
+                cooldownTime={4500}
+                // onEngineStop={deactivateForces}
             />
         </div>
     );

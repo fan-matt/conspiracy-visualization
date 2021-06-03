@@ -1,163 +1,555 @@
 const mysql = require('mysql');
 const express = require('express');
-const path = require('path')
+const path = require('path');
+const helper = require('./src/helper');
+const bodyParser = require('body-parser');
 const app = express();
 const port  = 5000;
 
-const connection = mysql.createConnection({
+
+const pool = mysql.createPool({
+	connectionLimit: 10,
 	host:'127.0.0.1',
 	user:'elee',
 	password: 'password',
 	database:'MAINDB',
-	multipleStatements : true
-});
-
+	multipleStatements:true
+}); 
 
 app.use(express.static(path.join(__dirname , 'build')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 
 app.get('/api/helloworld' , (req , res) => {
     res.send('Hello from the Express Server!');
 });
 
+/* All endpoints will perform type checking for :
+ * 	input parameters that are of primitive type
+ * 	ensure that date is a valid date
+ *
+ * */
 
-app.get('/api/graphDates' , (req , res) => {
+function defError(response, error){
+	response.json({'Error': error.code});
+	return;
+}
+function InvOrMissingParams(response){
+	response.json({'Error': "Missing or Invalid Parameters"});
+	return;
+}
+
+app.post('/api/graphDates' , (req , res) => {
+	
 	/*
-		Get every possible graph date, return array
-	*/
-	connection.query("SELECT DISTINCT Date FROM nodes", (err,result,fields)=>{
-		var json_object = {};
-		var date = "Date";
-		json_object[date] = [];
-		for(const tuple of result){
-			json_object[date].push(tuple.Date);
+	 * Get every possible graph date, return array
+	 * 
+	 * input: 
+	 * 	none
+	 * output: 
+	 * {
+	 *	dates:[]
+	 * }
+	 * 
+	 * 
+	 * */
+	pool.getConnection( (err,connection)=>{
+		if(err) {
+			// defError(res, err);
+			console.log(err);
+			return;
 		}
-		res.json(json_object);
-	});
-});
 
+		connection.query("SELECT DISTINCT Date FROM nodes", (errQ,result,fields)=>{
+			connection.release();
+		
+			if(errQ){
+				defError(res,errQ);
+				return;
+			}
+			else{
+				let json_object = {};
+				const field1 = "dates";	
+				json_object[field1] = [];
 
-app.get('/api/graph([\?]){0,}' , (req , res) => {
-	/*
-		Get entire graph given date, return JSON:
-
-		{
-			nodes: [
-				{
-					id: 'id1' ,
-					...
+				for(const tuple of result){
+					json_object[field1].push(tuple.Date);
 				}
-			] ,
-			links: [
-				{
-					source: 'id1' ,
-					target: 'id2' ,
-					...
-				} ,
-				...
-			]
+
+				res.json(json_object);
+			}	
+		});
+	});
+});
+
+
+app.post('/api/findObject' , (req , res) => {
+	
+	/*
+	 * Find nodes and links/rels matching keywords and communities
+	 * 
+	 * input: 
+	 * 	{
+	 *		communities:string //'1;2;3;4;5...'
+	 *		keywords:'string'  //'trump;biden;covid;'
+	 * 	}
+	 * output: 
+	 * {
+	 *	nodes: [(Node Objects)],
+	 *	links: [(Link Objects)]
+	 * }
+	 * 
+	 * 
+	 * */
+	
+	//check for all parameters
+	if(req.body.input == undefined || req.body.input.communities == undefined || req.body.input.keywords == undefined){
+		InvOrMissingParams(res);
+		console.log(req.body)
+		return;
+	}
+	//check parameters are of correct type
+	
+	for(const communityID of req.body.input.communities){
+		if(typeof communityID != "number"){
+			InvOrMissingParams(res);
+			console.log('asdfasfasdfas');
+			return;
 		}
-
-		Find the date here:
-		req.query.date
-	*/
-	var json_object = {};
-	var field1 = "nodes";
-	var field2 = "links";
-	json_object[field1] = [];
-	json_object[field2] = [];
-	var current = new Date(req.query.date);
-	current.setDate(current.getDate() - 1)
-	var next_day = new Date(req.query.date);
-
-	var query = "SELECT * FROM nodes WHERE Date > \"" + current.toISOString() +"\" AND Date <= \"" + next_day.toISOString() + "\"";
-	query += "; SELECT * FROM relationships WHERE Date >= \"" + current.toISOString() +"\" AND Date < \"" + next_day.toISOString() + "\"";
-	console.log(query);
-	connection.query(query, (err, result, fields)=>{
-		console.log(result);
-		for(const tuple of result[0]){
-			console.log(tuple);
-			json_object[field1].push(JSON.parse(JSON.stringify(tuple)));
+	}
+	for(const keyword of req.body.input.keywords){
+		if(typeof keyword != "string"){
+			InvOrMissingParams(res);
+			return;
+		}
+	}
+	
+	pool.getConnection( (err,connection)=>{
+		if(err) {
+			defError(res, err);
+			return;
 		}
 		
-		console.log(json_object[field1]);
-		for(const tuple of result[1]){
-			console.log(tuple);
-			json_object[field2].push(JSON.parse(JSON.stringify(tuple)));
+		//create node query
+		let node_query = 
+			'SELECT' + 
+			' nodes.Date,' + 
+			' nodes.node_id,' +
+			' nodes.node,' + 
+			' nodes.community,' + 
+			' nodes.graph_id' +
+			' FROM nodes' + 
+			' INNER JOIN node_rating ON' + 
+			' node_rating.node_id = nodes.node_id AND' +  
+			' node_rating.Date = nodes.Date';
+		let rel_query = 
+			';SELECT' + 
+			' relationships.Date,' + 
+			' relationships.obj1,' + 
+			' relationships.obj2,' + 
+			' relationships.relation,' + 
+			' relationships.rel_id,' + 
+			' relationships.graph_id' + 
+			' FROM relationships' + 
+			' INNER JOIN rel_rating ON' + 
+			' rel_rating.Date = relationships.Date AND' + 
+			' rel_rating.obj1 = relationships.obj1 AND' +
+			' rel_rating.obj2 = relationships.obj2';	
+		//adding constraints
+
+		if(req.body.input.communities != '' || req.body.input.keywords != ''){	
+			node_query += " WHERE";	
+			if(req.body.input.communities != ''){	
+				const communities = req.body.input.communities;
+				
+				for(let i = 0; i < (communities.length - 1); i++){
+					node_query += " community = " + connection.escape(communities[i]) + " OR"; 	
+				}
+
+				node_query += " community = " + connection.escape(communities[communities.length - 1]);
+			}
+			if(req.body.input.keywords != ''){
+				rel_query += " WHERE";	
+				const keywords = req.body.input.keywords;
+				
+				if(req.body.input.communities != ''){
+					node_query += " OR";
+				}
+
+				for(let i = 0; i < keywords.length - 1; i++){
+					node_query += " node LIKE " + connection.escape("%" + keywords[i] + "%") + " OR";
+					rel_query += " relation LIKE " + connection.escape("%" + keywords[i] + "%") + " OR";
+				}		
+				node_query += " node LIKE " + connection.escape("%" + keywords[keywords.length - 1] + "%") ;
+				rel_query += " relation LIKE " + connection.escape("%" + keywords[keywords.length - 1] + "%") ;
+			}
+
+		}
+		//order by the votes
+		node_query += 'ORDER BY nodes.Date DESC, votes DESC';
+		rel_query += 'ORDER BY relationships.Date DESC, votes DESC';
+		// console.log(node_query.concat(rel_query));
+		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
+			connection.release();
+			
+			if(errQ){
+				res.json({'Error':errQ.code});
+				console.log(errQ)
+			}
+			else{
+				let json_object = {};
+				const fields = ["nodes", "links"];	
+				for(let i = 0; i < fields.length; i++){
+					json_object[fields[i]] = [];	
+			
+					if(result[i] != undefined){
+						for(const tuple of result[i]){
+							json_object[fields[i]].push(tuple);
+						}
+					}
+				}
+				res.json(json_object);
+			}	
+		});
+	});
+});
+
+
+app.post('/api/neighborhood' , (req , res) => {
+	
+	/*
+	 * returns subgraph centered at 
+	 * 	with node with id 'id' 
+	 * 	with date on 'date'
+	 * 	with depth 'depth
+	 * 
+	 * input: 
+	 * {
+	 *	id: int, 	//node id, -1 for the entire graph
+	 *	date: 'date', 	//has to be in the format that is 
+	 *		      	//acceptable for Date.parse()
+	 *	depth: int	//-1 for the entire connected Component
+	 * }
+	 * output: 
+	 * {
+	 *	nodes: [],
+	 *	links: []
+	 * }
+	 * 
+	 * 
+	 * */
+	//check for presence of required params
+	if(req.body.input == undefined || 
+	   req.body.input.id == undefined || 
+	   req.body.input.date == undefined ||
+	   req.body.input.depth == undefined){
+		InvOrMissingParams(res);
+		return;
+	}
+	
+	//check for correct types
+	let node_date = new Date(req.body.input.date);
+	if((typeof req.body.input.id != "number") ||
+	   (node_date == "Invalid Date") ||
+	   (typeof req.body.input.depth != "number")){
+		InvOrMissingParams(res);
+		return;
+	}
+
+	let prev_date = new Date(req.body.input.date);
+	prev_date.setDate(prev_date.getDate() - 1);
+		
+	pool.getConnection( (err,connection)=>{
+		if(err) {
+			defError(res,err);
+			return;
+		}
+		let depth = req.body.input.depth;
+		if(depth == -1 || depth >= 4){
+			depth = 4;
+		}else if(depth < -1){
+			InvOrMissingParams(res);
+			return;
+		}
+		const id_esc = connection.escape(req.body.input.id);
+		const depth_esc = connection.escape(depth);
+		const date_esc = connection.escape(node_date);
+		const prev_date_esc = connection.escape(prev_date);	
+		
+		let query;
+		let offset;
+		if(req.body.input.id == -1){
+			query = "SELECT * FROM nodes WHERE" + 
+				" Date > " + prev_date_esc + " AND" + 
+				" Date <= " + date_esc +
+				";SELECT * FROM relationships WHERE" + 
+				" Date > " + prev_date_esc + " AND" + 
+				" Date <= " + date_esc;	
+			offset = 0;
+		}else{
+			query = 
+				" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
+					" (n INT," + 
+					" rel_id INT," +
+					" obj1 INT," +
+					" obj2 INT," +
+					" Date date);"; 			
+			query +=
+				" SET SESSION cte_max_recursion_depth = 100;"+
+				" INSERT INTO rel_recurse" + //insert the values
+				" WITH RECURSIVE CN(n, rel_id, obj1, obj2, Date) AS" +
+				" ((SELECT 0 AS n, -1 AS rel_id, " +
+					id_esc + " AS obj1, " +
+					id_esc + " AS obj2, " +
+					"20200101 AS Date)" +
+				" UNION" +
+				"(SELECT n+1,R.rel_id, R.obj1, R.obj2, R.Date" +
+				" FROM relationships R, CN " +
+				" WHERE" +
+				" (CN.obj1 = R.obj1 OR" +
+				" CN.obj2 = R.obj1 OR" +
+				" CN.obj1 = R.obj2 OR" +
+				" CN.obj2 = R.obj2) AND" +
+				" R.Date > " + prev_date_esc +" AND" +
+				" R.Date <= " + date_esc + " AND" + 
+				" n < " + depth_esc+ ")) SELECT * FROM CN" +  
+				" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
+				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
+				" WHERE nodes.Date >" + prev_date_esc + " AND" + 
+				" nodes.Date <=" + date_esc + ";" +
+				" SELECT " + 
+				" DISTINCT relationships.Date," + 
+				" relationships.obj1," + 
+				" relationships.obj2," + 
+				" relationships.relation," +
+				" relationships.rel_id," + 
+				" relationships.graph_id" + 
+				" FROM relationships" + //obtain relationships
+				" INNER JOIN rel_recurse ON"+
+				" rel_recurse.rel_id = relationships.rel_id AND" +
+				" rel_recurse.obj1 = relationships.obj1 AND" +
+				" rel_recurse.obj2 = relationships.obj2" +
+				" WHERE relationships.Date > " + prev_date_esc + " AND" + 
+				" relationships.Date <= " + date_esc;
+			offset = 3;
+		}
+		console.log(query);
+		connection.query(query, (errQ,result,fields)=>{
+			connection.destroy();
+		
+			if(errQ){
+				console.log("here");
+				defError(res,errQ);
+				console.log(errQ);
+				return;
+			}
+			else{
+				let json_object = {};
+				const fields = ["nodes", "links"];	
+
+				
+				for(let i = 0; i < 2; i++){
+					if(result[offset + i] != undefined){	
+						json_object[fields[i]] = [];
+						for(const tuple of result[offset + i]){
+							json_object[fields[i]].push(tuple);
+						}
+					}
+				}	
+				res.json(json_object);
+			}	
+		});
+	});
+});
+
+
+
+app.post('/api/voteNode' , (req , res) => {
+	
+	/*
+	 * vote up or down a node
+	 * 
+	 * input: 
+	 * {
+	 *	id: int 
+	 *	date: date 	// has to be of the format
+	 *		  	// acceptable by Date.parse
+	 *	vote: boolean	//true for upvote, false for downvote
+	 * }
+	 * output: 
+	 * 	none
+	 * 
+	 * */
+	//check for presence of required params
+	if(req.body.input == undefined ||
+	   req.body.input.id == undefined ||
+	   req.body.input.date == undefined ||
+	   req.body.input.vote == undefined){
+		console.log("hello");
+		InvOrMissingParams(res);
+		return;	
+	}
+	
+	//check for correct types
+	let node_date = new Date(req.body.input.date);
+	if((typeof req.body.input.id != "number") ||
+	   (node_date == "Invalid Date") ||
+	   (typeof req.body.input.vote != "boolean")){
+		console.log("world");
+		InvOrMissingParams(res);
+		return;
+	}
+
+	let prev_date = new Date(req.body.input.date);
+	prev_date.setDate(prev_date.getDate() - 1);
+
+
+
+	pool.getConnection( (err,connection)=>{
+		if(err) {
+			defError(res, err);
+			return;
 		}
 		
-		console.log(json_object[field2]);
-		res.json(json_object);
-	});
+		const id_esc = connection.escape(req.body.input.id);
+		const date_esc = connection.escape(node_date);
+		const prev_date_esc = connection.escape(prev_date);
+		let upOrDown = "";
+		if(req.body.input.vote == true){
+			upOrDown = "votes = votes + 1";	
+		}
+		else{
+			upOrDown = "votes = votes - 1";
+		}
+		let query =
 
-});
-
-
-
-
-
-//search for a particular node
-app.get('/api/query/nodeSearch', (req, res)=>{
-	connection.query("SELECT * FROM nodes WHERE node LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
-		res.json(result);
-	});
-});
-//search for a particular relationship
-app.get('/api/query/relationSearch', (req, res)=>{
-	connection.query("SELECT * FROM relationships WHERE relation LIKE '%" + req.query.searchItem + "%'", (err,result,fields)=>{
-		res.json(result);
-	});
-});
-
-//search for all outgoing edges
-app.get('/api/query/outgoing', (req,res)=>{
-	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj2 FROM relationships WHERE obj1='"+ req.query.node +"')",(err,result,fields)=>{
-		res.json(result);
-	});
-});
-
-//search for all incoming edges
-app.get('/api/query/incoming', (req,res)=>{
-	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj1 FROM relationships WHERE obj2='"+ req.query.node +"')",(err,result,fields)=>{
-		res.json(result);
+ 			"UPDATE node_rating" +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" + 
+                        " WHERE " +
+                        " Date > " +  prev_date_esc + " AND" +
+                        " Date <= " +  date_esc + " AND" +
+                        " node_id = " + id_esc;
+		connection.query(query, (errQ,result,fields)=>{
+			connection.release();
+		
+			if(errQ){
+				defError(res,errQ);
+				return;
+			}
+			else{
+				res.sendStatus(200);//send status OK
+			}	
+		});
 	});
 });
 
-//search for all incoming edges
-app.get('/api/query/incoming', (req,res)=>{
-	connection.query("SELECT * FROM nodes WHERE node IN (SELECT obj1 FROM relationships WHERE obj2='"+ req.query.node +"')",(err,result,fields)=>{
-		res.json(result);
+app.post('/api/voteRel' , (req , res) => {
+	
+	/*
+	 * vote up or down a rel
+	 * 
+	 * input: 
+	 * {
+	 *	id: int		//relID 
+	 *	date: date 	// has to be of the format
+	 *		  	// acceptable by Date.parse
+	 *	sourceId: int
+	 *	targetId: int
+	 * 	vote: boolean	//true for upvote, false for downvote
+	 * }
+	 * output: 
+	 * 	none
+	 * 
+	 * */
+	//check for presence of required params
+	if(req.body.input == undefined ||
+	   req.body.input.id == undefined ||
+	   req.body.input.date == undefined ||
+	   req.body.input.sourceId == undefined ||
+	   req.body.input.targetId == undefined ||
+	   req.body.input.vote == undefined){
+		InvOrMissingParams(res);
+		return;	
+	}
+	
+	//check for correct types
+	let node_date = new Date(req.body.input.date);
+	if((typeof req.body.input.id != "number") ||
+	   (node_date == "Invalid Date") ||
+	   (typeof req.body.input.sourceId != "number") ||
+	   (typeof req.body.input.targetId != "number") ||
+	   (typeof req.body.input.vote != "boolean")){
+		InvOrMissingParams(res);
+		return;
+	}
+
+	let prev_date = new Date(req.body.input.date);
+	prev_date.setDate(prev_date.getDate() - 1);
+
+	pool.getConnection( (err,connection)=>{
+		if(err) {
+			defError(res, err);
+			return;
+		}
+		
+		const id_esc = connection.escape(req.body.input.id);
+		const date_esc = connection.escape(node_date);
+		const prev_date_esc = connection.escape(prev_date);
+	   	const sourceId_esc = connection.escape(req.body.input.sourceId);
+		const targetId_esc = connection.escape(req.body.input.targetId);
+
+		let upOrDown = "";
+		if(req.body.input.vote == true){
+			upOrDown = "votes = votes + 1";	
+		}
+		else{
+			upOrDown = "votes = votes - 1";
+		}
+		let query =
+			"UPDATE rel_rating" +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" +
+                        " WHERE" +
+                        " Date > " +  prev_date_esc + " AND" +
+                        " Date <= " +  date_esc + " AND" +
+                        " obj1 = " + sourceId_esc + " AND" +
+                        " obj2 = " + targetId_esc + " AND" +
+                        " rel_id = " + id_esc;
+		connection.query(query, (errQ,result,fields)=>{
+			connection.release();
+		
+			if(errQ){
+				defError(res,errQ);
+				return;
+			}
+			else{
+				res.sendStatus(200);//send status OK
+			}	
+		});
 	});
 });
-
-//search for all nodes with certain graph_id
-app.get('/api/query/nodes_graph_id', (req,res)=>{
-	console.log("SELECT * FROM nodes WHERE graph_id =" + req.query.graphId);
-	connection.query("SELECT * FROM nodes WHERE graph_id =" + req.query.graphId,(err,result,fields)=>{
-		res.json(result);
-	});
-});
-
-//search for all relationships with certain graph_id
-app.get('/api/query/relationships_graph_id', (req,res)=>{
-	console.log("SELECT * FROM relationships WHERE graph_id =" + req.query.graphId);
-	connection.query("SELECT * FROM relationships WHERE graph_id =" + req.query.graphId,(err,result,fields)=>{
-		res.json(result);
-	});
-});
-
-
 
 
 app.get('/' , (req , res) => {
     res.sendFile(path.join(__dirname , 'build' , 'index.html'));
 });
 
-connection.connect((err)=>{
-	if(err) {
-		console.log("Error");
-		console.log(err);
-	} else {
-		console.log("Connected to DB!");
-	}
+const server = app.listen(port , () => console.log(`Listening at http://localhost:${port}`));
+
+process.on('SIGINT', ()=>{
+	console.log("Closing Pool.");
+	pool.end((err)=>{
+		if(err){
+			console.log(err);
+		}
+		console.log("Pool Closed.");
+	});
+	console.log("Closing Server.");
+	server.close((err)=>{
+		if(err){
+			console.log(err);
+		}
+		console.log("Server Closed.")
+	})
+	process.exitCode = 0;
 });
-app.listen(port , () => console.log(`Listening at http://localhost:${port}`));

@@ -1,12 +1,16 @@
-import React from 'react';
+import React , { useState } from 'react';
 import styled from 'styled-components';
+import ScrollContainer from './ScrollContainer';
+import { BsShift } from 'react-icons/bs';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import Label from './Label';
+import Input from './Input';
+import Button from './Button';
 
 import SwitchMenuPage from './SwitchMenuPage';
 
-
-const StyledField = styled.h3`
-    overflow-wrap: break-word;
-`;
 
 const IndicatorDot = styled.div`
     height: ${props => props.size};
@@ -17,6 +21,79 @@ const IndicatorDot = styled.div`
     margin-left: 20px;
 `;
 
+
+const StyledPage = styled.div`
+    line-height: 18px;
+    
+    & > h2 {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    & > h3 {
+        margin-bottom: 20px;
+    }
+`;
+
+
+const FormLabel = styled(Label)`
+    margin-bottom: 10px;
+`;
+
+
+const FormInput = styled(Input)`
+    width: calc(100% - 16px);
+    margin-bottom: 20px;
+`; 
+
+
+const FormButton = styled(Button)`
+    display: block;
+`;
+
+
+const RelationView = styled.div`
+    margin: 5px 0;
+    padding: 10px 0;
+    border-radius: 5px;
+    transition: 0.3s;
+
+    &:hover {
+        background-color: darkslategray;
+    }
+`;
+
+
+const RelationNode = styled.div`
+    color: cornflowerblue;
+    cursor: pointer;
+    transition: 0.3s;
+    padding: 5px 5px;
+
+    &:hover {
+        background-color: #1a1f29;
+    }
+`;
+
+
+const RelationLink = styled.div`
+    margin: 5px 5px;
+`;
+
+
+const CommunityMember = styled.div`
+    color: cornflowerblue;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px;
+    padding: 10px 5px;
+
+    &:hover {
+        background-color: darkslategray;
+    }
+`;
+
+
 /*
     A page that displays details about a node
 
@@ -24,6 +101,36 @@ const IndicatorDot = styled.div`
         node - a node object to display information about
 */
 export default function NodeDataPage(props) {
+    const [searchDepth , setSearchDepth] = useState(4);
+    const [showRelations , setShowRelations] = useState(false);
+    const [showCommunity , setShowCommunity] = useState(false);
+
+    let relations = <> </>;
+
+    if(props.node) {
+        relations = props.node.links.map((link) => {
+            return(
+                <RelationView>
+                    <RelationNode onClick={() => props.updateNode(link.source)}> {link.source.node} </RelationNode>
+                    <RelationLink> {`>> ${link.relation} >>`} </RelationLink>
+                    <RelationNode onClick={() => props.updateNode(link.target)}> {link.target.node} </RelationNode>
+                </RelationView>
+            );
+        });
+    }
+
+
+    let cMembers = <> </>
+
+    if(props.node) {
+        cMembers = props.communityMembers(props.node).map((n) => {
+            return(
+                <CommunityMember onClick={() => props.updateNode(n)}> {n.node} </CommunityMember>
+            );
+        })
+    }
+
+
     let pageContent = (
         <> </>
     )
@@ -45,31 +152,114 @@ export default function NodeDataPage(props) {
         );
     }
     else {
+        let communityName = (members) => {
+            let maxNeighbors = -1;
+            let name = '';
+
+            console.log('members');
+            console.log(members);
+
+            members.forEach(member => {
+                if(member.neighbors.length >= maxNeighbors) {
+                    maxNeighbors = member.neighbors.length;
+                    name = member.node;
+                }
+            });
+
+            return name;
+        }
+
         pageContent = (
             <React.Fragment>
-                <h1 style={{fontSize: '25px' , marginBottom: '50px'}}>
-                    {props.node.name}
-                </h1>
-
                 <h2> Node: </h2>
-                <StyledField> {props.node.node} </StyledField>
+                <h3> {props.node.node} </h3>
 
                 <h2> Community: </h2>
                 <h3 style={{display: 'flex' , alignItems: 'center'}}> 
-                    {props.node.community === -1 ? 'None' : props.node.community} <IndicatorDot color={props.node.color} size='20px' /> 
+                    {props.node.community === -1 ? 'None' : `(${communityName(props.communityMembers(props.node))}) ${props.node.community}`} <IndicatorDot color={props.node.color} size='20px' /> 
                 </h3>
 
-                <h2> Neighbors: </h2>
-                <h3> Under construction :) </h3>
+                <h2> Community Members: ({cMembers.length}) </h2> 
+                <Button onClick={() => setShowCommunity(!showCommunity)}> Toggle Visibility </Button>
+                <div style={{margin: '10px 0' , display: 'block'}}></div>
+                {showCommunity ? <ScrollContainer maxHeight={300}> {cMembers} </ScrollContainer> : <> </>}
+
+                <h2 style={{marginTop: '20px'}}> Relationships: ({relations.length}) </h2> 
+                <Button onClick={() => setShowRelations(!showRelations)}> Toggle Visibility </Button>
+                <div style={{margin: '10px 0' , display: 'block'}}></div>
+                {showRelations ? <ScrollContainer maxHeight={300}> {relations} </ScrollContainer> : <> </>}
+
+                <form onSubmit={(e) => {
+                    e.preventDefault(); 
+                    props.updateSubgraph({
+                        id: props.node.id ,
+                        date: props.node.Date ,
+                        depth: searchDepth
+                    } , props.node.id)
+                }}>
+                    <FormLabel style={{marginTop: '20px'}}> Search Depth </FormLabel>
+                    <FormInput 
+                        type='text' 
+                        value={searchDepth} 
+                        onInput={(e) => {
+                            setSearchDepth(Number(e.target.value));
+                        }} 
+                    />
+                    <FormButton> Search </FormButton>
+                </form>
+
+                <div style={{display: 'flex' , justifyContent: 'space-around' , marginTop: '50px'}}>
+                    <Button onClick={() => {
+                        props.voteNode(props.node , true);
+                        toast.dark('Upvoted!', {
+                            position: "bottom-center",
+                            autoClose: 5000,
+                            hideProgressBar: true,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: 0,
+                            });
+                    }}>  
+                        Upvote <BsShift /> 
+                    </Button>
+
+                    <Button onClick={() => {
+                        props.voteNode(props.node , false);
+                        toast.dark('Downvoted!', {
+                            position: "bottom-center",
+                            autoClose: 5000,
+                            hideProgressBar: true,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: 0,
+                            });
+                    }}>
+                        Downvote <BsShift style={{transform: 'rotate(0.5turn)'}} /> 
+                    </Button>
+                </div>
             </React.Fragment>
         );
     }
 
     return (
         <SwitchMenuPage>
-            <div style={pageStyle}>
+            <StyledPage style={pageStyle}>
                 {pageContent}
-            </div>
+            </StyledPage>
+
+            <ToastContainer
+                position="bottom-center"
+                autoClose={5000}
+                hideProgressBar
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </SwitchMenuPage>
     );
 }

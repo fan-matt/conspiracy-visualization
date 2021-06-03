@@ -7,7 +7,7 @@ let StyledSwitchMenu = styled.div`
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 100px);
     background-color: #1a1f29;
 `;
 
