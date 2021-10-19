@@ -138,6 +138,7 @@ app.post('/api/findObject' , (req , res) => {
 			' nodes.node,' + 
 			' nodes.community,' + 
 			' nodes.graph_id' +
+			' nodes.meta' +
 			' FROM nodes' + 
 			' INNER JOIN node_rating ON' + 
 			' node_rating.node_id = nodes.node_id AND' +  
@@ -150,6 +151,7 @@ app.post('/api/findObject' , (req , res) => {
 			' relationships.relation,' + 
 			' relationships.rel_id,' + 
 			' relationships.graph_id' + 
+			' relationships.meta' + 
 			' FROM relationships' + 
 			' INNER JOIN rel_rating ON' + 
 			' rel_rating.Date = relationships.Date AND' + 
@@ -310,7 +312,7 @@ app.post('/api/neighborhood' , (req , res) => {
 				" CN.obj2 = R.obj2) AND" +
 				" R.Date > " + prev_date_esc +" AND" +
 				" R.Date <= " + date_esc + " )) SELECT * FROM CN" +  
-				" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
+				" ;SELECT DISTINCT node_id, node, community, nodes.Date , nodes.meta FROM nodes" + //obtain nodes
 				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
 				" WHERE nodes.Date >" + prev_date_esc + " AND" + 
 				" nodes.Date <=" + date_esc + ";" +
@@ -321,6 +323,7 @@ app.post('/api/neighborhood' , (req , res) => {
 				" relationships.relation," +
 				" relationships.rel_id," + 
 				" relationships.graph_id" + 
+				" relationships.meta" + 
 				" FROM relationships" + //obtain relationships
 				" INNER JOIN rel_recurse ON"+
 				" rel_recurse.rel_id = relationships.rel_id AND" +
