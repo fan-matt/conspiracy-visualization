@@ -1,4 +1,4 @@
-import React from 'react';
+import { MouseEventHandler } from 'react';
 import styled from 'styled-components';
 
 
@@ -20,10 +20,17 @@ const StyledButton = styled.button`
 `;
 
 
-export default function Button(props) {
+type Props = {
+    className?: string ,
+    onClick?: MouseEventHandler ,
+    children: any ,
+};
+
+
+export default function Button({className , onClick , children}: Props) {
     return(
-        <StyledButton {...props}>
-            {props.children}
+        <StyledButton className={className} onClick={onClick} >
+            {children}
         </StyledButton>
     );
 }

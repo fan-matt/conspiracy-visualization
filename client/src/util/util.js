@@ -4,16 +4,10 @@ export function formatDate(dateTime) {
     let year = date.substring(0 , date.indexOf('-'));
     let rest = date.substring(date.indexOf('-') + 1);
 
-    console.log('r ' + rest);
-
     let month = rest.substring(0 , rest.indexOf('-'));
     let day = rest.substring(rest.indexOf('-') + 1);
 
     let monthString;
-
-    console.log('y ' + year);
-    console.log('m ' + month);
-    console.log('d ' + day);
 
     switch(month) {
         case '01':

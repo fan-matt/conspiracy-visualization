@@ -10,10 +10,8 @@ const port  = 5000;
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host:'127.0.0.1',
-	user:'nodeApp',
-	password: '18dkniuiaookjs',//'18dkniuia%',
-
-
+	user:'elee',
+	password: 'password',
 	database:'MAINDB',
 	multipleStatements:true
 }); 
@@ -58,7 +56,8 @@ app.post('/api/graphDates' , (req , res) => {
 	 * */
 	pool.getConnection( (err,connection)=>{
 		if(err) {
-			defError(res, err);
+			// defError(res, err);
+			console.log(err);
 			return;
 		}
 
@@ -71,7 +70,7 @@ app.post('/api/graphDates' , (req , res) => {
 			}
 			else{
 				let json_object = {};
-				const field1 = "Date";	
+				const field1 = "dates";	
 				json_object[field1] = [];
 
 				for(const tuple of result){
@@ -107,6 +106,7 @@ app.post('/api/findObject' , (req , res) => {
 	//check for all parameters
 	if(req.body.input == undefined || req.body.input.communities == undefined || req.body.input.keywords == undefined){
 		InvOrMissingParams(res);
+		console.log(req.body)
 		return;
 	}
 	//check parameters are of correct type
@@ -114,6 +114,7 @@ app.post('/api/findObject' , (req , res) => {
 	for(const communityID of req.body.input.communities){
 		if(typeof communityID != "number"){
 			InvOrMissingParams(res);
+			console.log('asdfasfasdfas');
 			return;
 		}
 	}
@@ -189,14 +190,15 @@ app.post('/api/findObject' , (req , res) => {
 
 		}
 		//order by the votes
-		node_query += 'ORDER BY votes DESC';
-		rel_query += 'ORDER BY votes DESC';
-		console.log(node_query.concat(rel_query));
+		node_query += 'ORDER BY nodes.Date DESC, votes DESC';
+		rel_query += 'ORDER BY relationships.Date DESC, votes DESC';
+		// console.log(node_query.concat(rel_query));
 		connection.query(node_query.concat(rel_query), (errQ,result,fields)=>{
 			connection.release();
 			
 			if(errQ){
 				res.json({'Error':errQ.code});
+				console.log(errQ)
 			}
 			else{
 				let json_object = {};
@@ -283,8 +285,8 @@ app.post('/api/neighborhood' , (req , res) => {
 			return;
 		}
 		let depth = req.body.input.depth;
-		if(depth = -1){
-			depth = 100;
+		if(depth == -1 || depth >= 4){
+			depth = 4;
 		}else if(depth < -1){
 			InvOrMissingParams(res);
 			return;
@@ -307,20 +309,21 @@ app.post('/api/neighborhood' , (req , res) => {
 		}else{
 			query = 
 				" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
-					" (rel_id INT," +
+					" (n INT," + 
+					" rel_id INT," +
 					" obj1 INT," +
 					" obj2 INT," +
 					" Date date);"; 			
 			query +=
-				" SET SESSION cte_max_recursion_depth = " + depth_esc + ";" +//set max depth 
+				" SET SESSION cte_max_recursion_depth = 100;"+
 				" INSERT INTO rel_recurse" + //insert the values
-				" WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
-				" ((SELECT -1 AS rel_id, " +
+				" WITH RECURSIVE CN(n, rel_id, obj1, obj2, Date) AS" +
+				" ((SELECT 0 AS n, -1 AS rel_id, " +
 					id_esc + " AS obj1, " +
 					id_esc + " AS obj2, " +
 					"20200101 AS Date)" +
 				" UNION" +
-				"(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
+				"(SELECT n+1,R.rel_id, R.obj1, R.obj2, R.Date" +
 				" FROM relationships R, CN " +
 				" WHERE" +
 				" (CN.obj1 = R.obj1 OR" +
@@ -355,7 +358,9 @@ app.post('/api/neighborhood' , (req , res) => {
 			connection.destroy();
 		
 			if(errQ){
+				console.log("here");
 				defError(res,errQ);
+				console.log(errQ);
 				return;
 			}
 			else{
@@ -415,6 +420,7 @@ app.post('/api/voteNode' , (req , res) => {
 	   req.body.input.id == undefined ||
 	   req.body.input.date == undefined ||
 	   req.body.input.vote == undefined){
+		console.log("hello");
 		InvOrMissingParams(res);
 		return;	
 	}
@@ -424,6 +430,7 @@ app.post('/api/voteNode' , (req , res) => {
 	if((typeof req.body.input.id != "number") ||
 	   (node_date == "Invalid Date") ||
 	   (typeof req.body.input.vote != "boolean")){
+		console.log("world");
 		InvOrMissingParams(res);
 		return;
 	}
@@ -452,7 +459,7 @@ app.post('/api/voteNode' , (req , res) => {
 		let query =
 
  			"UPDATE node_rating" +
-                        " SET " + upOrDown +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" + 
                         " WHERE " +
                         " Date > " +  prev_date_esc + " AND" +
                         " Date <= " +  date_esc + " AND" +
@@ -535,7 +542,7 @@ app.post('/api/voteRel' , (req , res) => {
 		}
 		let query =
 			"UPDATE rel_rating" +
-                        " SET " + upOrDown +
+                        " SET " + upOrDown + ", times_alterred = times_alterred + 1" +
                         " WHERE" +
                         " Date > " +  prev_date_esc + " AND" +
                         " Date <= " +  date_esc + " AND" +
