@@ -138,7 +138,8 @@ app.post('/api/findObject' , (req , res) => {
 			' nodes.node_id,' +
 			' nodes.node,' + 
 			' nodes.community,' + 
-			' nodes.graph_id' +
+			' nodes.graph_id,' +
+			' nodes.meta' +
 			' FROM nodes' + 
 			' INNER JOIN node_rating ON' + 
 			' node_rating.node_id = nodes.node_id AND' +  
@@ -150,12 +151,14 @@ app.post('/api/findObject' , (req , res) => {
 			' relationships.obj2,' + 
 			' relationships.relation,' + 
 			' relationships.rel_id,' + 
-			' relationships.graph_id' + 
+			' relationships.graph_id,' + 
+			' relationships.meta' + 
 			' FROM relationships' + 
 			' INNER JOIN rel_rating ON' + 
 			' rel_rating.Date = relationships.Date AND' + 
 			' rel_rating.obj1 = relationships.obj1 AND' +
-			' rel_rating.obj2 = relationships.obj2';	
+			' rel_rating.obj2 = relationships.obj2 AND' + 
+			' rel_rating.rel_id = relationships.rel_id';	
 		//adding constraints
 
 		if(req.body.input.communities != '' || req.body.input.keywords != ''){	
@@ -171,7 +174,7 @@ app.post('/api/findObject' , (req , res) => {
 			}
 			if(req.body.input.keywords != ''){
 				rel_query += " WHERE";	
-				const keywords = req.body.input.keywords;
+				const keywords = req.body.input.keywords.split(';');
 				
 				if(req.body.input.communities != ''){
 					node_query += " OR";
@@ -199,14 +202,30 @@ app.post('/api/findObject' , (req , res) => {
 			}
 			else{
 				let json_object = {};
-				const fields = ["nodes", "links"];	
-				for(let i = 0; i < fields.length; i++){
-					json_object[fields[i]] = [];	
-			
-					if(result[i] != undefined){
-						for(const tuple of result[i]){
-							json_object[fields[i]].push(tuple);
+				const fields = ["nodes", "links"];
+				//nodes
+				json_object["nodes"] = [];
+				if(result[0] != undefined){
+					for(const tuple of result[0]){
+						console.log(tuple)
+						json_object["nodes"].push(tuple);
+					}
+				}
+				//relationships
+				json_object["links"] = [];
+				if(result[1] != undefined){
+					for(const tuple of result[1]){
+						var p = JSON.parse(tuple["meta"].replace(/'/g,'"'));
+						temp = tuple["meta"];
+						delete tuple["meta"];
+						
+						var obj = JSON.parse(JSON.stringify(tuple));
+						var keys = Object.keys(p);
+						
+						for(var i = 0; i < keys.length; i++){
+							obj[keys[i]] = p[keys[i]];	
 						}
+						json_object["links"].push(obj);
 					}
 				}
 				res.json(json_object);
@@ -312,9 +331,8 @@ app.post('/api/neighborhood' , (req , res) => {
 				" CN.obj1 = R.obj2 OR" +
 				" CN.obj2 = R.obj2) AND" +
 				" R.Date > " + prev_date_esc +" AND" +
-				" R.Date <= " + date_esc + " AND" + 
-				" n < " + depth_esc+ ")) SELECT * FROM CN" +  
-				" ;SELECT DISTINCT node_id, node, community, nodes.Date FROM nodes" + //obtain nodes
+				" R.Date <= " + date_esc + " )) SELECT * FROM CN" +  
+				" ;SELECT DISTINCT node_id, node, community, nodes.Date , nodes.meta FROM nodes" + //obtain nodes
 				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
 				" WHERE nodes.Date >" + prev_date_esc + " AND" + 
 				" nodes.Date <=" + date_esc + ";" +
@@ -324,7 +342,8 @@ app.post('/api/neighborhood' , (req , res) => {
 				" relationships.obj2," + 
 				" relationships.relation," +
 				" relationships.rel_id," + 
-				" relationships.graph_id" + 
+				" relationships.graph_id," + 
+				" relationships.meta" + 
 				" FROM relationships" + //obtain relationships
 				" INNER JOIN rel_recurse ON"+
 				" rel_recurse.rel_id = relationships.rel_id AND" +
@@ -353,7 +372,22 @@ app.post('/api/neighborhood' , (req , res) => {
 					if(result[offset + i] != undefined){	
 						json_object[fields[i]] = [];
 						for(const tuple of result[offset + i]){
-							json_object[fields[i]].push(tuple);
+							if(i == 1){//relationships
+								var p = JSON.parse(tuple["meta"].replace(/'/g,'"'));
+								temp = tuple["meta"];
+								delete tuple["meta"];
+								
+								var obj = JSON.parse(JSON.stringify(tuple));
+								var keys = Object.keys(p);
+								
+								for(var j = 0; j < keys.length; j++){
+									obj[keys[j]] = p[keys[j]];	
+								}
+								json_object["links"].push(obj);
+							}
+							else{
+								json_object[fields[i]].push(tuple);
+							}
 						}
 					}
 				}	
