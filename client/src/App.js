@@ -71,7 +71,7 @@ function App() {
 
     const fetchLatestGraph = async () => {
       const dates = await fetchDates();
-      const datesArray = dates.dates;
+      const datesArray = dates.Date;
       const latestDate = datesArray[datesArray.length - 1];
 
       setGraphDate(formatDate(latestDate));
@@ -104,6 +104,10 @@ function App() {
     });
 
     const dates = await response.json();
+
+    console.log("Dates:");
+    console.log(dates);
+
     return dates;
   }
 

@@ -103,13 +103,15 @@ export default function NodeDataPage(props) {
         <RelationView>
           <RelationNode onClick={() => props.updateNode(link.source)}>
             {" "}
-            {link.source.node}{" "}
+            {`${link.arg1} (${link.source.node})`}
           </RelationNode>
-          <RelationLink> {`>> ${link.relation} >>`} </RelationLink>
+          <RelationLink> {`>> ${link.rel} >>`} </RelationLink>
           <RelationNode onClick={() => props.updateNode(link.target)}>
             {" "}
-            {link.target.node}{" "}
+            {`${link.arg2} (${link.target.node})`}
           </RelationNode>
+
+          <div style={{ color: "orange" }}>{link.sentence}</div>
         </RelationView>
       );
     });
@@ -168,10 +170,18 @@ export default function NodeDataPage(props) {
       return name;
     };
 
+    let metaData = JSON.parse(props.node.meta);
+
     pageContent = (
       <React.Fragment>
         <h2> Node: </h2>
         <h3> {props.node.node} </h3>
+
+        <h2 style={{ marginTop: "20px" }}> Weight: </h2>
+        <h3> {metaData.weight} </h3>
+
+        <h2 style={{ marginTop: "20px" }}> Type: </h2>
+        <h3> {metaData.color} </h3>
 
         {/* <h2> Community: </h2>
                 <h3 style={{display: 'flex' , alignItems: 'center'}}> 
