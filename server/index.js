@@ -409,7 +409,12 @@ app.post("/api/neighborhood", (req, res) => {
                 console.log(tuple["meta"].replace("'", "''"));
                 console.log("\n\n");
 
-                var p = JSON.parse(tuple["meta"].replace("'", "''"));
+                let formatted = tuple["meta"].replace("'", "''");
+
+                // Replace strange ascii characters
+                formatted = formatted.replace(/[^\u000A\u0020-\u007E]/g, " ");
+
+                var p = JSON.parse(formatted);
                 temp = tuple["meta"];
                 delete tuple["meta"];
 
