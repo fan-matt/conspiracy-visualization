@@ -293,6 +293,33 @@ function App() {
     }
   }
 
+function arrayExistsIn(arr, str) {
+  let result = false;;
+
+  arr.forEach(element => {
+    if(str.indexOf(element) > -1) {
+      result = true;
+    }
+  });
+
+  return result;
+}
+
+function focusGraph(focus) {
+  let focusArray = focus.split(";");
+
+  let dataCopy = Object.assign({}, data);
+  let nodes = dataCopy.nodes;
+  let filteredNodes = nodes.filter(node => arrayExistsIn(focusArray, node.node));
+
+  let filteredLinks = dataCopy.links.filter(link => arrayExistsIn(focusArray, link.source.node) && arrayExistsIn(focusArray, link.target.node))
+
+  dataCopy.nodes = filteredNodes;
+  dataCopy.links = filteredLinks;
+
+  setData(dataCopy);
+}
+
   return (
     <div className="App">
       <MainLayout date={graphDate}>
@@ -327,6 +354,7 @@ function App() {
               searchedNodes={searchedObjects.nodes}
               updateSubgraph={updateSubgraph}
               voteNode={voteNode}
+              focusGraph={focusGraph}
             />
             <Footer />
           </MenuAndFooter>
