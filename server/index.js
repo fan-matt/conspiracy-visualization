@@ -52,34 +52,121 @@ app.post("/api/graphDates", (req, res) => {
    *
    *
    * */
+	  pool.getConnection((err, connection) => {
+		if (err) {
+			defError(res, err);
+			return;
+		}
+		connection.query(
+		"SELECT DISTINCT Date FROM nodes",
+		(errQ, result, fields) => {
+			connection.release();
+
+			if (errQ) {
+				  defError(res, errQ);
+				  return;
+			} else {
+				  let json_object = {};
+				  const field1 = "Date";
+				  json_object[field1] = [];
+
+				  for (const tuple of result) {
+				    json_object[field1].push(tuple.Date);
+				  }
+
+				  res.json(json_object);
+			}
+		});
+	});
+});
+
+app.post("/api/staticGraphs", (req, res)=>{
+/* Find nodes and links attached to the given graph_id
+ *
+ * input:{
+ *	graphID: int
+ * }
+ *
+ * output:{
+ *	nodes:[node objects],
+ *	links:[link objects]
+ * }
+ *
+ * */
+ //check for presence of required params
+  if (
+    req.body.input == undefined ||
+    req.body.input.graphID == undefined
+  ) {
+    InvOrMissingParams(res);
+    return;
+  }
+
+  //check for correct types
+  let node_date = new Date(req.body.input.date);
+  if (typeof req.body.input.graphID != "number") {
+    InvOrMissingParams(res);
+    return;
+  }
+  if(req.body.input.graphID > -1){
+	InvOrMissingParams(res);
+	return;
+  }
+  const graph_id_esc = connection.escape(req.body.input.graphID);
   pool.getConnection((err, connection) => {
     if (err) {
       defError(res, err);
       return;
     }
-
     connection.query(
-      "SELECT DISTINCT Date FROM nodes",
-      (errQ, result, fields) => {
+		"SELECT * FROM nodes WHERE graph_id = " + graph_id_esc ,
+      	(errQ, result, fields) => {
         connection.release();
 
-        if (errQ) {
-          defError(res, errQ);
-          return;
-        } else {
-          let json_object = {};
-          const field1 = "Date";
-          json_object[field1] = [];
+			if (errQ) {
+				defError(res, errQ);
+				return;
+			} else {
+				let json_object = {};
+				const fields = ["nodes", "links"];
 
-          for (const tuple of result) {
-            json_object[field1].push(tuple.Date);
-          }
+				for (let i = 0; i < 2; i++) {
+				  if (result[offset + i] != undefined) {
+					json_object[fields[i]] = [];
+					for (const tuple of result[offset + i]) {
+					  if (i == 1) {
+					//relationships
 
-          res.json(json_object);
-        }
-      }
-    );
-  });
+					let formatted = tuple["meta"].replace("'", "''");
+
+					// Replace strange ascii characters
+					formatted = formatted.replace(/[^\u000A\u0020-\u007E]/g, " ");
+
+					var p = JSON.parse(formatted);
+					temp = tuple["meta"];
+					delete tuple["meta"];
+
+					var obj = JSON.parse(JSON.stringify(tuple));
+					var keys = Object.keys(p);
+
+					for (var j = 0; j < keys.length; j++) {
+					  obj[keys[j]] = p[keys[j]];
+					}
+					json_object["links"].push(obj);
+					  } else {
+					json_object[fields[i]].push(tuple);
+					  }
+					}
+				  }
+				}
+
+				console.log(json_object);
+
+				res.json(json_object);
+			}
+
+  		});
+  	});
 });
 
 app.post("/api/findObject", (req, res) => {
@@ -403,11 +490,6 @@ app.post("/api/neighborhood", (req, res) => {
             for (const tuple of result[offset + i]) {
               if (i == 1) {
                 //relationships
-                console.log("tuple");
-                console.log(tuple["meta"]);
-                console.log("formatted");
-                console.log(tuple["meta"].replace("'", "''"));
-                console.log("\n\n");
 
                 let formatted = tuple["meta"].replace("'", "''");
 
