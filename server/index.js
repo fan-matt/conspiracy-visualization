@@ -1,10 +1,11 @@
+const JSON5 = require('json5');
 const mysql = require("mysql");
 const express = require("express");
 const path = require("path");
 const helper = require("./src/helper");
 const bodyParser = require("body-parser");
 const app = express();
-const port = 5000;
+const port = 5001;
 
 const pool = mysql.createPool({
   connectionLimit: 10,
@@ -176,7 +177,12 @@ app.post("/api/findObject", (req, res) => {
       }
       if (req.body.input.keywords != "") {
         rel_query += " WHERE";
-        const keywords = req.body.input.keywords.split(";");
+
+	console.log(`keywords: ${req.body.input.keywords}`);
+
+        const keywords = String(req.body.input.keywords).split(";");
+
+	console.log(`split keywords: ${keywords}`);
 
         if (req.body.input.communities != "") {
           node_query += " OR";
@@ -222,8 +228,20 @@ app.post("/api/findObject", (req, res) => {
         json_object["links"] = [];
         if (result[1] != undefined) {
           for (const tuple of result[1]) {
-            var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
-            temp = tuple["meta"];
+		if(tuple["meta"] != null && tuple["meta"] != "") {
+	
+		console.log(`unfiltered meta: ${tuple["meta"]}`);
+
+		// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
+		let metaString = tuple["meta"];
+		metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+		
+		console.log(`metaString: ${metaString}`);
+
+		let p = JSON5.parse(metaString);
+            // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
+            // temp = tuple["meta"];
+		temp = metaString;
             delete tuple["meta"];
 
             var obj = JSON.parse(JSON.stringify(tuple));
@@ -233,6 +251,7 @@ app.post("/api/findObject", (req, res) => {
               obj[keys[i]] = p[keys[i]];
             }
             json_object["links"].push(obj);
+		}
           }
         }
         res.json(json_object);

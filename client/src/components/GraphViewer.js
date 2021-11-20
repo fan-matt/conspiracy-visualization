@@ -182,9 +182,29 @@ function GraphViewer(props) {
       ctx.fill();
     }
 
+    let focusArray = props.focusString.split(";");
+
+    let existsIn = false;
+
+    focusArray.forEach(element => {
+      if(node.node.indexOf(element) > -1) {
+        existsIn = true;
+      }
+    });
+
+    if(props.focusString == "") {
+      existsIn = false;
+    }
+
     ctx.beginPath();
     ctx.arc(node.x, node.y, NODE_SIZE, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color ? color : node.__indexColor;
+
+    if(existsIn) {
+      ctx.fillStyle = color ? color : "#ffd700";
+    } else {
+      ctx.fillStyle = color ? color : node.__indexColor;
+    }
+
     ctx.fill();
 
     // ctx.beginPath();
@@ -271,9 +291,9 @@ function GraphViewer(props) {
         }
         linkCurvature="curvature"
         onBackgroundClick={handleBackgroundClick}
-        d3AlphaDecay={0.03}
-        d3VelocityDecay={0.04}
-        cooldownTime={4500}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.1}
+        cooldownTime={3000}
         // onEngineStop={deactivateForces}
       />
     </div>

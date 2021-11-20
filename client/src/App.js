@@ -36,6 +36,8 @@ function App() {
   const [data, setData] = useState({ nodes: [], links: [] });
   const [graphDate, setGraphDate] = useState(undefined);
 
+  const [focusString, setFocusString] = useState("");
+
   const [searchedObjects, setSearchedObjects] = useState({
     nodes: [],
     links: [],
@@ -306,18 +308,20 @@ function arrayExistsIn(arr, str) {
 }
 
 function focusGraph(focus) {
-  let focusArray = focus.split(";");
+  // let focusArray = focus.split(";");
 
-  let dataCopy = Object.assign({}, data);
-  let nodes = dataCopy.nodes;
-  let filteredNodes = nodes.filter(node => arrayExistsIn(focusArray, node.node));
+  // let dataCopy = Object.assign({}, data);
+  // let nodes = dataCopy.nodes;
+  // let filteredNodes = nodes.filter(node => arrayExistsIn(focusArray, node.node));
 
-  let filteredLinks = dataCopy.links.filter(link => arrayExistsIn(focusArray, link.source.node) && arrayExistsIn(focusArray, link.target.node))
+  // let filteredLinks = dataCopy.links.filter(link => arrayExistsIn(focusArray, link.source.node) && arrayExistsIn(focusArray, link.target.node))
 
-  dataCopy.nodes = filteredNodes;
-  dataCopy.links = filteredLinks;
+  // dataCopy.nodes = filteredNodes;
+  // dataCopy.links = filteredLinks;
 
-  setData(dataCopy);
+  // setData(dataCopy);
+
+  setFocusString(focus);
 }
 
   return (
@@ -337,6 +341,7 @@ function focusGraph(focus) {
             data={data}
             onNodeClick={onNodeClick}
             currentNode={currentNode}
+            focusString={focusString}
           />
 
           <MenuAndFooter>
