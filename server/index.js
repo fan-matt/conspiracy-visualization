@@ -5,7 +5,7 @@ const path = require("path");
 const helper = require("./src/helper");
 const bodyParser = require("body-parser");
 const app = express();
-const port = 5001;
+const port = 5000;
 
 const pool = mysql.createPool({
   connectionLimit: 10,
