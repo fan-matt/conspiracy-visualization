@@ -126,11 +126,11 @@ app.post("/api/staticGraphs", (req, res)=>{
 	    	"node, " + 
 	    	"community, " + 
 	    	"graph_id" +
-	    	" FROM nodes WHERE graph_id = " + graph_id_esc + ";"
+	    	" FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
 	    	"SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
-      	(errQ, result, fields) => {
-  	const graph_id_esc = connection.escape(req.body.input.graphID);
-        connection.release();
+		(errQ, result, fields) => {
+			const graph_id_esc = connection.escape(req.body.input.graphID);
+			connection.release();
 
 			if (errQ) {
 				defError(res, errQ);
