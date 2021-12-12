@@ -113,7 +113,6 @@ app.post("/api/staticGraphs", (req, res)=>{
 	InvOrMissingParams(res);
 	return;
   }
-  const graph_id_esc = connection.escape(req.body.input.graphID);
   pool.getConnection((err, connection) => {
     if (err) {
       defError(res, err);
@@ -122,6 +121,7 @@ app.post("/api/staticGraphs", (req, res)=>{
     connection.query(
 		"SELECT * FROM nodes WHERE graph_id = " + graph_id_esc ,
       	(errQ, result, fields) => {
+  	const graph_id_esc = connection.escape(req.body.input.graphID);
         connection.release();
 
 			if (errQ) {
