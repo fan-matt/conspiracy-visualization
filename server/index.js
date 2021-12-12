@@ -137,7 +137,9 @@ app.post("/api/staticGraphs", (req, res)=>{
 				return;
 			} else {
 				let json_object = {};
-				const fields = ["nodes", "links"];
+			
+				json_object["nodes"] = [];
+				json_object["links"] = [];
 				if (result[0] != undefined) {
 				  for (const tuple of result[0]) {
 				    console.log(tuple);
