@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import styled from 'styled-components';
 
 import SwitchMenuPage from './SwitchMenuPage';
@@ -55,6 +55,7 @@ type Props = {
             keywords: string ,
         }
         setFilters: (field: string , value: string) => void ,
+        focusGraph: (focus: string) => void,
         filter: () => void ,
         searchedNodes: any[]
 };
@@ -63,6 +64,8 @@ type Props = {
 const GraphFilterPage: FC<Props> = (props) => {
 
     let searchedNodes = props.searchedNodes.slice();
+
+    const [focus, setFocus] = useState("");
 
     searchedNodes.sort((a , b) => {
         const dateA = new Date(a.Date);
@@ -74,9 +77,6 @@ const GraphFilterPage: FC<Props> = (props) => {
     if(searchedNodes.length >= 80) {
         searchedNodes.length = 80;
     }
-
-    console.log('searched nodes');
-    console.log(searchedNodes);
 
     let searchResults = searchedNodes.map((node) => {
         return(
@@ -95,6 +95,22 @@ const GraphFilterPage: FC<Props> = (props) => {
 
     return(
         <SwitchMenuPage>
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                props.focusGraph(focus);
+            }}>
+                <FormLabel> Focus (delimit with semicolon) </FormLabel>
+                <FormInput 
+                    type='text' 
+                    onInput={(e) => setFocus(e.target.value)} 
+                    autoFocus     
+                />
+
+                <FormButton> Focus </FormButton>
+            </form>
+
+            <div style={{height: "20px"}}></div>
+
             <form onSubmit={(e) => {
                 e.preventDefault();
                 

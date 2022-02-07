@@ -2,9 +2,9 @@ const axios = require('axios');
 
 axios.post('http://localhost:5000/api/voteNode', {
 	input:{
-		id: 3,	
-		date: '2020-01-01T08:00:00.000Z',	
-		vote: true
+		id: 1,
+		date: "2020-01-02",
+		depth: 3
 	}
 })
 .then(res =>{
