@@ -237,7 +237,8 @@ app.post("/api/findObject", (req, res) => {
       " nodes.node_id," +
       " nodes.node," +
       " nodes.community," +
-      " nodes.graph_id" +
+      " nodes.graph_id," +
+      " nodes.meta" +
       " FROM nodes" +
       " INNER JOIN node_rating ON" +
       " node_rating.node_id = nodes.node_id AND" +
