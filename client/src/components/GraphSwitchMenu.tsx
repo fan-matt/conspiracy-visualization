@@ -32,7 +32,8 @@ type Props = {
     searchedNodes: any[] ,
     pageIndex: number ,
     onIndexChange: (index: number) => void ,
-    voteNode: (node: any , vote: boolean) => void
+    voteNode: (node: any , vote: boolean) => void,
+    focusGraph: (focus: string) => void,
 }
 
 
@@ -53,6 +54,7 @@ const GraphSwitchMenu: FC <Props> = (props) => {
             filter={props.filter} 
             searchedNodes={props.searchedNodes} 
             updateSubgraph={props.updateSubgraph} 
+            focusGraph={props.focusGraph}
         /> ,
         <NodeDataPage 
             node={props.currentNode} 
