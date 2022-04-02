@@ -113,59 +113,71 @@ app.post("/api/staticGraphs", (req, res)=>{
 	InvOrMissingParams(res);
 	return;
   }
-  const graph_id_esc = connection.escape(req.body.input.graphID);
   pool.getConnection((err, connection) => {
     if (err) {
       defError(res, err);
       return;
     }
+    const graph_id_esc = connection.escape(req.body.input.graphID);
     connection.query(
-		"SELECT * FROM nodes WHERE graph_id = " + graph_id_esc ,
-      	(errQ, result, fields) => {
-        connection.release();
+		"SELECT " + 
+	    	"Date, " +
+	    	"node_id, " + 
+	    	"node, " + 
+	    	"community, " + 
+	    	"graph_id" +
+	    	" FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
+	    	"SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
+		(errQ, result, fields) => {
+			const graph_id_esc = connection.escape(req.body.input.graphID);
+			connection.release();
 
 			if (errQ) {
 				defError(res, errQ);
 				return;
 			} else {
 				let json_object = {};
-				const fields = ["nodes", "links"];
+			
+				json_object["nodes"] = [];
+				json_object["links"] = [];
+				if (result[0] != undefined) {
+				  for (const tuple of result[0]) {
+				    console.log(tuple);
+				    json_object["nodes"].push(tuple);
+				  }
+				}
+				//relationships
+				json_object["links"] = [];
+				if (result[1] != undefined) {
+				  for (const tuple of result[1]) {
+					if(tuple["meta"] != null && tuple["meta"] != "") {
+				
+					console.log(`unfiltered meta: ${tuple["meta"]}`);
 
-				for (let i = 0; i < 2; i++) {
-				  if (result[offset + i] != undefined) {
-					json_object[fields[i]] = [];
-					for (const tuple of result[offset + i]) {
-					  if (i == 1) {
-					//relationships
+					// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
+					let metaString = tuple["meta"];
+					metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+					
+					console.log(`metaString: ${metaString}`);
 
-					let formatted = tuple["meta"].replace("'", "''");
+					let p = JSON5.parse(metaString);
+				    // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
+				    // temp = tuple["meta"];
+					temp = metaString;
+				    delete tuple["meta"];
 
-					// Replace strange ascii characters
-					formatted = formatted.replace(/[^\u000A\u0020-\u007E]/g, " ");
+				    var obj = JSON.parse(JSON.stringify(tuple));
+				    var keys = Object.keys(p);
 
-					var p = JSON.parse(formatted);
-					temp = tuple["meta"];
-					delete tuple["meta"];
-
-					var obj = JSON.parse(JSON.stringify(tuple));
-					var keys = Object.keys(p);
-
-					for (var j = 0; j < keys.length; j++) {
-					  obj[keys[j]] = p[keys[j]];
-					}
-					json_object["links"].push(obj);
-					  } else {
-					json_object[fields[i]].push(tuple);
-					  }
+				    for (var i = 0; i < keys.length; i++) {
+				      obj[keys[i]] = p[keys[i]];
+				    }
+				    json_object["links"].push(obj);
 					}
 				  }
 				}
-
-				console.log(json_object);
-
 				res.json(json_object);
 			}
-
   		});
   	});
 });
@@ -225,8 +237,7 @@ app.post("/api/findObject", (req, res) => {
       " nodes.node_id," +
       " nodes.node," +
       " nodes.community," +
-      " nodes.graph_id," +
-      " nodes.meta" +
+      " nodes.graph_id" +
       " FROM nodes" +
       " INNER JOIN node_rating ON" +
       " node_rating.node_id = nodes.node_id AND" +
