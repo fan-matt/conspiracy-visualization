@@ -170,7 +170,11 @@ export default function NodeDataPage(props) {
       return name;
     };
 
-    let metaData = JSON.parse(props.node.meta);
+    let metaData;
+
+    if(props.node.meta) {
+      metaData = JSON.parse(props.node.meta);
+    }
 
     pageContent = (
       <React.Fragment>
@@ -178,10 +182,10 @@ export default function NodeDataPage(props) {
         <h3> {props.node.node} </h3>
 
         <h2 style={{ marginTop: "20px" }}> Weight: </h2>
-        <h3> {metaData.weight} </h3>
+        <h3> {metaData?.weight} </h3>
 
         <h2 style={{ marginTop: "20px" }}> Type: </h2>
-        <h3> {metaData.color} </h3>
+        <h3> {metaData?.color} </h3>
 
         {/* <h2> Community: </h2>
                 <h3 style={{display: 'flex' , alignItems: 'center'}}> 

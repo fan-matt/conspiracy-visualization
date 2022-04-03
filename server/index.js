@@ -6,6 +6,7 @@ const helper = require("./src/helper");
 const bodyParser = require("body-parser");
 const formidable = require("formidable");
 const util = require("util");
+const fs = require("fs");
 const {body, validationResult} = require("express-validator");
 const app = express();
 
@@ -16,7 +17,7 @@ const pool = mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
 	user: "elee",
-	password: "1234",
+	password: "password",
 
 	database: "MAINDB",
 	multipleStatements: true,
@@ -29,7 +30,7 @@ const ASYNC_pool = ASYNC_mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
 	user: "elee",
-	password: "1234",
+	password: "password",
 
 	database: "MAINDB",
 	multipleStatements: true,
@@ -73,8 +74,11 @@ app.post("/api/graphDates", (req, res) => {
 	 *
 	 * */
 	pool.getConnection((err, connection) => {
-		if (err) {
+		console.log("Fetching dates");
+    
+    if (err) {
 			defError(res, err);
+      console.log(err);
 			return;
 		}
 		connection.query(
@@ -119,8 +123,11 @@ app.get("/api/getStaticGraphList", async (req, res)=>{
 	 *
 	 * output: [list of graph_id and ]
 	 * */
+  console.log("Getting static graphs");
 	const connection = await ASYNC_pool.awaitGetConnection();
 	connection.on("error", (err)=>{
+    console.log("error");
+    console.log(err);
 		defError(res,errP);
 		return;
 	});
@@ -135,16 +142,43 @@ app.post("/api/storeGraph", async (req,res)=>{
 	 * input: //note how this is not a json object
 	 * 	
 	 * 	title:string
+   *  password:string
 	 *	type: string, //expect "nodes" or "relationships"
 	 *	nodes: FileType
 	 *	relationships: FileType
 	 * 
 	 * */
 	
+  console.log("Graph uploading");
+
 	const form = new formidable.IncomingForm();
 	form.uploadDir = uploadFolder;
 	form.parse(req, async (err, fields, files)=>{
-		if(err){
+    console.log('parsing form');
+    console.log('files');
+    console.log(files);
+
+
+
+
+    fs.readdir('C:/Users/FnMat/Desktop/lab/conspiracy-visualization/server/uploaded', (err, files) => {
+      console.log('dir files');
+      if (err) {
+          console.log(err);
+      } else {
+        // files object contains all files names
+        // log them on console
+        files.forEach(file => {
+          console.log(file);
+      });
+      }
+  });
+
+
+
+
+
+		if(err || fields.password !== "greengreen"){
 			InvOrMissingParams(res);
 			return;
 		}
@@ -156,29 +190,62 @@ app.post("/api/storeGraph", async (req,res)=>{
 		});
 		let result = await connection.awaitQuery("SELECT (MIN(graph_id)) -1 AS next_graph_id from staticgraphs");
 		const next_graph_id = result[0]["next_graph_id"];
+    const escapedGraphId = connection.escape(next_graph_id);
 		
 		await connection.awaitBeginTransaction();
 		await connection.awaitQuery("INSERT INTO staticgraphs VALUES (" + connection.escape(next_graph_id) + "," + connection.escape(fields.title) + ")");
 		
-		let loadLine = "";
+		// let loadLine;
+		// loadLine = "LOAD DATA LOCAL INFILE " + 
+		// 	connection.escape(files.nodes.filepath) + 
+		// 	" INTO TABLE nodes FIELDS TERMINATED BY ','"  + 
+		// 	" OPTIONALLY ENCLOSED BY '\"'" + 
+		// 	" IGNORE 1 LINES" + 
+		// 	" (@dummy, node_id, node, community, date,@dummy2, meta)" + 
+		// 	" SET graph_id = "+ connection.escape(next_graph_id) + ";";
+		// await connection.awaitQuery(loadLine);
+
+
+    // loadLine = "LOAD DATA LOCAL INFILE " + 
+		// 	connection.escape(files.relationships.filepath) + 
+		// 	" INTO TABLE relationships FIELDS TERMINATED BY ','"  + 
+		// 	" OPTIONALLY ENCLOSED BY '\"'" + 
+		// 	" IGNORE 1 LINES" + 
+		// 	" (@dummy, rel_id, obj1, relation, obj2, date,@dummy2, meta)" + 
+		// 	" SET graph_id = " + connection.escape(next_graph_id) + ";";
+		// await connection.awaitQuery(loadLine);
+
+
+
+
+    let loadLine;
+    await connection.awaitQuery('CREATE TEMPORARY TABLE temp_nodes SELECT * FROM nodes LIMIT 0;');
+    await connection.awaitQuery('CREATE TEMPORARY TABLE temp_rels SELECT * FROM relationships LIMIT 0;');
+
 		loadLine = "LOAD DATA LOCAL INFILE " + 
 			connection.escape(files.nodes.filepath) + 
-			" INTO TABLE nodes FIELDS TERMINATED BY ','"  + 
+			" INTO TABLE temp_nodes FIELDS TERMINATED BY ','"  + 
 			" OPTIONALLY ENCLOSED BY '\"'" + 
 			" IGNORE 1 LINES" + 
-			" (@dummy, node_id, node, community, date,@dummy2, meta)" + 
-			" SET graph_id = "+ connection.escape(next_graph_id) + ";";
+			" (@dummy, node_id, node, community, date, graph_id, meta);";
 		await connection.awaitQuery(loadLine);
+
+    await connection.awaitQuery(`UPDATE temp_nodes SET graph_id = ${escapedGraphId};`);
+    await connection.awaitQuery('INSERT INTO nodes SELECT * FROM temp_nodes;');
+
+
 		
 		loadLine = "LOAD DATA LOCAL INFILE " + 
 			connection.escape(files.relationships.filepath) + 
-			" INTO TABLE relationships FIELDS TERMINATED BY ','"  + 
+			" INTO TABLE temp_rels FIELDS TERMINATED BY ','"  + 
 			" OPTIONALLY ENCLOSED BY '\"'" + 
 			" IGNORE 1 LINES" + 
-			" (@dummy, rel_id, obj1, relation, obj2, date,@dummy2, meta)" + 
-			" SET graph_id = " + connection.escape(next_graph_id) + ";";
+			" (@dummy, rel_id, obj1, relation, obj2, date, graph_id, meta);";
 		await connection.awaitQuery(loadLine);
 		
+    await connection.awaitQuery(`UPDATE temp_rels SET graph_id = ${escapedGraphId};`);
+    await connection.awaitQuery('INSERT INTO relationships SELECT * FROM temp_rels;');
+
 		await connection.awaitCommit();
 
 		connection.release();
@@ -188,474 +255,476 @@ app.post("/api/storeGraph", async (req,res)=>{
 });
 
 app.post("/api/staticGraphs", (req, res)=>{
-	/* Find nodes and links attached to the given graph_id
-	 *
-	 * input:{
-	 *	graphID: int
-	 * }
-	 *
-	 * output:{
-	 *	nodes:[node objects],
-	 *	links:[link objects]
-	 * }
-	 *
-	 * */
-	//check for presence of required params
-	if (
-		req.body.input == undefined ||
-		req.body.input.graphID == undefined
-	) {
-		InvOrMissingParams(res);
-		return;
-	}
+  console.log("fetching static graphs");
+/* Find nodes and links attached to the given graph_id
+  *
+  * input:{
+  *	graphID: int
+  * }
+  *
+  * output:{
+  *	nodes:[node objects],
+  *	links:[link objects]
+  * }
+  *
+  * */
+  //check for presence of required params
+  if (
+    req.body.input == undefined ||
+    req.body.input.graphID == undefined
+  ) {
+    InvOrMissingParams(res);
+    console.log(req.body);
+    return;
+  }
 
-	//check for correct types
-	let node_date = new Date(req.body.input.date);
-	if (typeof req.body.input.graphID != "number") {
-		InvOrMissingParams(res);
-		return;
-	}
-	if(req.body.input.graphID > -1){
-		InvOrMissingParams(res);
-		return;
-	}
-	pool.getConnection((err, connection) => {
-		if (err) {
-			defError(res, err);
-			return;
-		}
-		const graph_id_esc = connection.escape(req.body.input.graphID);
-		connection.query(
-			"SELECT " + 
-			"Date, " +
-			"node_id, " + 
-			"node, " + 
-			"community, " + 
-			"graph_id" +
-			" FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
-			"SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
-			(errQ, result, fields) => {
-				const graph_id_esc = connection.escape(req.body.input.graphID);
-				connection.release();
+  //check for correct types
+  let node_date = new Date(req.body.input.date);
+  if (typeof req.body.input.graphID != "number") {
+    InvOrMissingParams(res);
+    return;
+  }
+  if(req.body.input.graphID > -1){
+  InvOrMissingParams(res);
+  return;
+  }
+  pool.getConnection((err, connection) => {
+    if (err) {
+      defError(res, err);
+      return;
+    }
+    const graph_id_esc = connection.escape(req.body.input.graphID);
+    connection.query(
+    "SELECT " + 
+        "Date, " +
+        "node_id, " + 
+        "node, " + 
+        "community, " + 
+        "graph_id" +
+        " FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
+        "SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
+    (errQ, result, fields) => {
+      const graph_id_esc = connection.escape(req.body.input.graphID);
+      connection.release();
 
-				if (errQ) {
-					defError(res, errQ);
-					return;
-				} else {
-					let json_object = {};
+      if (errQ) {
+        defError(res, errQ);
+        return;
+      } else {
+        let json_object = {};
+      
+        json_object["nodes"] = [];
+        json_object["links"] = [];
+        if (result[0] != undefined) {
+          for (const tuple of result[0]) {
+            console.log(tuple);
+            json_object["nodes"].push(tuple);
+          }
+        }
+        //relationships
+        json_object["links"] = [];
+        if (result[1] != undefined) {
+          for (const tuple of result[1]) {
+          if(tuple["meta"] != null && tuple["meta"] != "") {
+        
+          console.log(`unfiltered meta: ${tuple["meta"]}`);
 
-					json_object["nodes"] = [];
-					json_object["links"] = [];
-					if (result[0] != undefined) {
-						for (const tuple of result[0]) {
-							json_object["nodes"].push(tuple);
-						}
-					}
-					//relationships
-					json_object["links"] = [];
-					if (result[1] != undefined) {
-						for (const tuple of result[1]) {
-							if(tuple["meta"] != null && tuple["meta"] != "") {
+          // let metaString = String(tuple["meta"]).replaceAll("'", "\"");
+          let metaString = tuple["meta"];
+          metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+          
+          console.log(`metaString: ${metaString}`);
 
-								console.log(`unfiltered meta: ${tuple["meta"]}`);
+          let p = JSON5.parse(metaString);
+            // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
+            // temp = tuple["meta"];
+          temp = metaString;
+            delete tuple["meta"];
 
-								// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
-								let metaString = tuple["meta"];
-								metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+            var obj = JSON.parse(JSON.stringify(tuple));
+            var keys = Object.keys(p);
 
-								console.log(`metaString: ${metaString}`);
-
-								let p = JSON5.parse(metaString);
-								// var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
-								// temp = tuple["meta"];
-								temp = metaString;
-								delete tuple["meta"];
-
-								var obj = JSON.parse(JSON.stringify(tuple));
-								var keys = Object.keys(p);
-
-								for (var i = 0; i < keys.length; i++) {
-									obj[keys[i]] = p[keys[i]];
-								}
-								json_object["links"].push(obj);
-							}
-						}
-					}
-					res.json(json_object);
-				}
-			});
-	});
+            for (var i = 0; i < keys.length; i++) {
+              obj[keys[i]] = p[keys[i]];
+            }
+            json_object["links"].push(obj);
+          }
+          }
+        }
+        res.json(json_object);
+      }
+      });
+    });
 });
 
 app.post("/api/findObject", (req, res) => {
-	/*
-	 * Find nodes and links/rels matching keywords and communities
-	 *
-	 * input:
-	 * 	{
-	 *		communities:string //'1;2;3;4;5...'
-	 *		keywords:'string'  //'trump;biden;covid;'
-	 * 	}
-	 * output:
-	 * {
-	 *	nodes: [(Node Objects)],
-	 *	links: [(Link Objects)]
-	 * }
-	 *
-	 *
-	 * */
+  /*
+   * Find nodes and links/rels matching keywords and communities
+   *
+   * input:
+   * 	{
+   *		communities:string //'1;2;3;4;5...'
+   *		keywords:'string'  //'trump;biden;covid;'
+   * 	}
+   * output:
+   * {
+   *	nodes: [(Node Objects)],
+   *	links: [(Link Objects)]
+   * }
+   *
+   *
+   * */
 
-	//check for all parameters
-	if (
-		req.body.input == undefined ||
-		req.body.input.communities == undefined ||
-		req.body.input.keywords == undefined
-	) {
-		InvOrMissingParams(res);
-		return;
-	}
-	//check parameters are of correct type
+  //check for all parameters
+  if (
+    req.body.input == undefined ||
+    req.body.input.communities == undefined ||
+    req.body.input.keywords == undefined
+  ) {
+    InvOrMissingParams(res);
+    return;
+  }
+  //check parameters are of correct type
 
-	for (const communityID of req.body.input.communities) {
-		if (typeof communityID != "number") {
-			InvOrMissingParams(res);
-			return;
+  for (const communityID of req.body.input.communities) {
+    if (typeof communityID != "number") {
+      InvOrMissingParams(res);
+      return;
+    }
+  }
+  for (const keyword of req.body.input.keywords) {
+    if (typeof keyword != "string") {
+      InvOrMissingParams(res);
+      return;
+    }
+  }
+
+  pool.getConnection((err, connection) => {
+    if (err) {
+      defError(res, err);
+      return;
+    }
+
+    //create node query
+    let node_query =
+      "SELECT" +
+      " nodes.Date," +
+      " nodes.node_id," +
+      " nodes.node," +
+      " nodes.community," +
+      " nodes.graph_id" +
+      " FROM nodes" +
+      " INNER JOIN node_rating ON" +
+      " node_rating.node_id = nodes.node_id AND" +
+      " node_rating.Date = nodes.Date";
+    let rel_query =
+      ";SELECT" +
+      " relationships.Date," +
+      " relationships.obj1," +
+      " relationships.obj2," +
+      " relationships.relation," +
+      " relationships.rel_id," +
+      " relationships.graph_id," +
+      " relationships.meta" +
+      " FROM relationships" +
+      " INNER JOIN rel_rating ON" +
+      " rel_rating.Date = relationships.Date AND" +
+      " rel_rating.obj1 = relationships.obj1 AND" +
+      " rel_rating.obj2 = relationships.obj2 AND" +
+      " rel_rating.rel_id = relationships.rel_id";
+    //adding constraints
+
+    if (req.body.input.communities != "" || req.body.input.keywords != "") {
+      node_query += " WHERE";
+      if (req.body.input.communities != "") {
+        const communities = req.body.input.communities;
+
+        for (let i = 0; i < communities.length - 1; i++) {
+          node_query +=
+            " community = " + connection.escape(communities[i]) + " OR";
+        }
+
+        node_query +=
+          " community = " +
+          connection.escape(communities[communities.length - 1]);
+      }
+      if (req.body.input.keywords != "") {
+        rel_query += " WHERE";
+
+	console.log(`keywords: ${req.body.input.keywords}`);
+
+        const keywords = String(req.body.input.keywords).split(";");
+
+	console.log(`split keywords: ${keywords}`);
+
+        if (req.body.input.communities != "") {
+          node_query += " OR";
+        }
+
+        for (let i = 0; i < keywords.length - 1; i++) {
+          node_query +=
+            " node LIKE " + connection.escape("%" + keywords[i] + "%") + " OR";
+          rel_query +=
+            " relation LIKE " +
+            connection.escape("%" + keywords[i] + "%") +
+            " OR";
+        }
+        node_query +=
+          " node LIKE " +
+          connection.escape("%" + keywords[keywords.length - 1] + "%");
+        rel_query +=
+          " relation LIKE " +
+          connection.escape("%" + keywords[keywords.length - 1] + "%");
+      }
+    }
+    //order by the votes
+    node_query += "ORDER BY votes DESC";
+    rel_query += "ORDER BY votes DESC";
+    console.log(node_query.concat(rel_query));
+    connection.query(node_query.concat(rel_query), (errQ, result, fields) => {
+      connection.release();
+
+      if (errQ) {
+        res.json({ Error: errQ.code });
+      } else {
+        let json_object = {};
+        const fields = ["nodes", "links"];
+        //nodes
+        json_object["nodes"] = [];
+        if (result[0] != undefined) {
+          for (const tuple of result[0]) {
+            console.log(tuple);
+            json_object["nodes"].push(tuple);
+          }
+        }
+        //relationships
+        json_object["links"] = [];
+        if (result[1] != undefined) {
+          for (const tuple of result[1]) {
+		if(tuple["meta"] != null && tuple["meta"] != "") {
+	
+		console.log(`unfiltered meta: ${tuple["meta"]}`);
+
+		// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
+		let metaString = tuple["meta"];
+		metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+		
+		console.log(`metaString: ${metaString}`);
+
+		let p = JSON5.parse(metaString);
+            // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
+            // temp = tuple["meta"];
+		temp = metaString;
+            delete tuple["meta"];
+
+            var obj = JSON.parse(JSON.stringify(tuple));
+            var keys = Object.keys(p);
+
+            for (var i = 0; i < keys.length; i++) {
+              obj[keys[i]] = p[keys[i]];
+            }
+            json_object["links"].push(obj);
 		}
-	}
-	for (const keyword of req.body.input.keywords) {
-		if (typeof keyword != "string") {
-			InvOrMissingParams(res);
-			return;
-		}
-	}
-
-	pool.getConnection((err, connection) => {
-		if (err) {
-			defError(res, err);
-			return;
-		}
-
-		//create node query
-		let node_query =
-			"SELECT" +
-			" nodes.Date," +
-			" nodes.node_id," +
-			" nodes.node," +
-			" nodes.community," +
-			" nodes.graph_id," +
-			" nodes.meta" +
-			" FROM nodes" +
-			" INNER JOIN node_rating ON" +
-			" node_rating.node_id = nodes.node_id AND" +
-			" node_rating.Date = nodes.Date";
-		let rel_query =
-			";SELECT" +
-			" relationships.Date," +
-			" relationships.obj1," +
-			" relationships.obj2," +
-			" relationships.relation," +
-			" relationships.rel_id," +
-			" relationships.graph_id," +
-			" relationships.meta" +
-			" FROM relationships" +
-			" INNER JOIN rel_rating ON" +
-			" rel_rating.Date = relationships.Date AND" +
-			" rel_rating.obj1 = relationships.obj1 AND" +
-			" rel_rating.obj2 = relationships.obj2 AND" +
-			" rel_rating.rel_id = relationships.rel_id";
-		//adding constraints
-
-		if (req.body.input.communities != "" || req.body.input.keywords != "") {
-			node_query += " WHERE";
-			if (req.body.input.communities != "") {
-				const communities = req.body.input.communities;
-
-				for (let i = 0; i < communities.length - 1; i++) {
-					node_query +=
-						" community = " + connection.escape(communities[i]) + " OR";
-				}
-
-				node_query +=
-					" community = " +
-					connection.escape(communities[communities.length - 1]);
-			}
-			if (req.body.input.keywords != "") {
-				rel_query += " WHERE";
-
-				console.log(`keywords: ${req.body.input.keywords}`);
-
-				const keywords = String(req.body.input.keywords).split(";");
-
-				console.log(`split keywords: ${keywords}`);
-
-				if (req.body.input.communities != "") {
-					node_query += " OR";
-				}
-
-				for (let i = 0; i < keywords.length - 1; i++) {
-					node_query +=
-						" node LIKE " + connection.escape("%" + keywords[i] + "%") + " OR";
-					rel_query +=
-						" relation LIKE " +
-						connection.escape("%" + keywords[i] + "%") +
-						" OR";
-				}
-				node_query +=
-					" node LIKE " +
-					connection.escape("%" + keywords[keywords.length - 1] + "%");
-				rel_query +=
-					" relation LIKE " +
-					connection.escape("%" + keywords[keywords.length - 1] + "%");
-			}
-		}
-		//order by the votes
-		node_query += "ORDER BY votes DESC";
-		rel_query += "ORDER BY votes DESC";
-		console.log(node_query.concat(rel_query));
-		connection.query(node_query.concat(rel_query), (errQ, result, fields) => {
-			connection.release();
-
-			if (errQ) {
-				res.json({ Error: errQ.code });
-			} else {
-				let json_object = {};
-				const fields = ["nodes", "links"];
-				//nodes
-				json_object["nodes"] = [];
-				if (result[0] != undefined) {
-					for (const tuple of result[0]) {
-						console.log(tuple);
-						json_object["nodes"].push(tuple);
-					}
-				}
-				//relationships
-				json_object["links"] = [];
-				if (result[1] != undefined) {
-					for (const tuple of result[1]) {
-						if(tuple["meta"] != null && tuple["meta"] != "") {
-
-							console.log(`unfiltered meta: ${tuple["meta"]}`);
-
-							// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
-							let metaString = tuple["meta"];
-							metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
-
-							console.log(`metaString: ${metaString}`);
-
-							let p = JSON5.parse(metaString);
-							// var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
-							// temp = tuple["meta"];
-							temp = metaString;
-							delete tuple["meta"];
-
-							var obj = JSON.parse(JSON.stringify(tuple));
-							var keys = Object.keys(p);
-
-							for (var i = 0; i < keys.length; i++) {
-								obj[keys[i]] = p[keys[i]];
-							}
-							json_object["links"].push(obj);
-						}
-					}
-				}
-				res.json(json_object);
-			}
-		});
-	});
+          }
+        }
+        res.json(json_object);
+      }
+    });
+  });
 });
 
 app.post("/api/neighborhood", (req, res) => {
-	/*
-	 * returns subgraph centered at
-	 * 	with node with id 'id'
-	 * 	with date on 'date'
-	 * 	with depth 'depth
-	 *
-	 * input:
-	 * {
-	 *	id: int, 	//node id, -1 for the entire graph
-	 *	date: 'date', 	//has to be in the format that is
-	 *		      	//acceptable for Date.parse()
-	 *	depth: int	//-1 for the entire connected Component
-	 * }
-	 * output:
-	 * {
-	 *	nodes: [],
-	 *	links: []
-	 * }
-	 *
-	 *
-	 * */
+  /*
+   * returns subgraph centered at
+   * 	with node with id 'id'
+   * 	with date on 'date'
+   * 	with depth 'depth
+   *
+   * input:
+   * {
+   *	id: int, 	//node id, -1 for the entire graph
+   *	date: 'date', 	//has to be in the format that is
+   *		      	//acceptable for Date.parse()
+   *	depth: int	//-1 for the entire connected Component
+   * }
+   * output:
+   * {
+   *	nodes: [],
+   *	links: []
+   * }
+   *
+   *
+   * */
 
-	console.log(req.body);
+  console.log(req.body);
 
-	//check for presence of required params
-	if (
-		req.body.input == undefined ||
-		req.body.input.id == undefined ||
-		req.body.input.date == undefined ||
-		req.body.input.depth == undefined
-	) {
-		InvOrMissingParams(res);
-		return;
-	}
+  //check for presence of required params
+  if (
+    req.body.input == undefined ||
+    req.body.input.id == undefined ||
+    req.body.input.date == undefined ||
+    req.body.input.depth == undefined
+  ) {
+    InvOrMissingParams(res);
+    return;
+  }
 
-	//check for correct types
-	let node_date = new Date(req.body.input.date);
-	if (
-		typeof req.body.input.id != "number" ||
-		node_date == "Invalid Date" ||
-		typeof req.body.input.depth != "number"
-	) {
-		InvOrMissingParams(res);
-		return;
-	}
+  //check for correct types
+  let node_date = new Date(req.body.input.date);
+  if (
+    typeof req.body.input.id != "number" ||
+    node_date == "Invalid Date" ||
+    typeof req.body.input.depth != "number"
+  ) {
+    InvOrMissingParams(res);
+    return;
+  }
 
-	let prev_date = new Date(req.body.input.date);
-	prev_date.setDate(prev_date.getDate() - 1);
+  let prev_date = new Date(req.body.input.date);
+  prev_date.setDate(prev_date.getDate() - 1);
 
-	pool.getConnection((err, connection) => {
-		if (err) {
-			defError(res, err);
-			return;
-		}
-		let depth = req.body.input.depth;
-		if ((depth = -1)) {
-			depth = 100;
-		} else if (depth < -1) {
-			InvOrMissingParams(res);
-			return;
-		}
-		const id_esc = connection.escape(req.body.input.id);
-		const depth_esc = connection.escape(depth);
-		const date_esc = connection.escape(node_date);
-		const prev_date_esc = connection.escape(prev_date);
+  pool.getConnection((err, connection) => {
+    if (err) {
+      defError(res, err);
+      return;
+    }
+    let depth = req.body.input.depth;
+    if ((depth = -1)) {
+      depth = 100;
+    } else if (depth < -1) {
+      InvOrMissingParams(res);
+      return;
+    }
+    const id_esc = connection.escape(req.body.input.id);
+    const depth_esc = connection.escape(depth);
+    const date_esc = connection.escape(node_date);
+    const prev_date_esc = connection.escape(prev_date);
 
-		let query;
-		let offset;
-		if (req.body.input.id == -1) {
-			query =
-				"SELECT * FROM nodes WHERE" +
-				" Date > " +
-				prev_date_esc +
-				" AND" +
-				" Date <= " +
-				date_esc +
-				";SELECT * FROM relationships WHERE" +
-				" Date > " +
-				prev_date_esc +
-				" AND" +
-				" Date <= " +
-				date_esc;
-			offset = 0;
-		} else {
-			query =
-				" CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
-				" (rel_id INT," +
-				" obj1 INT," +
-				" obj2 INT," +
-				" Date date);";
-			query +=
-				" SET SESSION cte_max_recursion_depth = " +
-				depth_esc +
-				";" + //set max depth
-				" INSERT INTO rel_recurse" + //insert the values
-				" WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
-				" ((SELECT -1 AS rel_id, " +
-				id_esc +
-				" AS obj1, " +
-				id_esc +
-				" AS obj2, " +
-				"20200101 AS Date)" +
-				" UNION" +
-				"(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
-				" FROM relationships R, CN " +
-				" WHERE" +
-				" (CN.obj1 = R.obj1 OR" +
-				" CN.obj2 = R.obj1 OR" +
-				" CN.obj1 = R.obj2 OR" +
-				" CN.obj2 = R.obj2) AND" +
-				" R.Date > " +
-				prev_date_esc +
-				" AND" +
-				" R.Date <= " +
-				date_esc +
-				" )) SELECT * FROM CN" +
-				" ;SELECT DISTINCT node_id, node, community, nodes.Date , nodes.meta FROM nodes" + //obtain nodes
-				" INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
-				" WHERE nodes.Date >" +
-				prev_date_esc +
-				" AND" +
-				" nodes.Date <=" +
-				date_esc +
-				";" +
-				" SELECT " +
-				" DISTINCT relationships.Date," +
-				" relationships.obj1," +
-				" relationships.obj2," +
-				" relationships.relation," +
-				" relationships.rel_id," +
-				" relationships.graph_id," +
-				" relationships.meta" +
-				" FROM relationships" + //obtain relationships
-				" INNER JOIN rel_recurse ON" +
-				" rel_recurse.rel_id = relationships.rel_id AND" +
-				" rel_recurse.obj1 = relationships.obj1 AND" +
-				" rel_recurse.obj2 = relationships.obj2" +
-				" WHERE relationships.Date > " +
-				prev_date_esc +
-				" AND" +
-				" relationships.Date <= " +
-				date_esc;
-			offset = 3;
-		}
-		console.log(query);
-		connection.query(query, (errQ, result, fields) => {
-			connection.destroy();
+    let query;
+    let offset;
+    if (req.body.input.id == -1) {
+      query =
+        "SELECT * FROM nodes WHERE" +
+        " Date > " +
+        prev_date_esc +
+        " AND" +
+        " Date <= " +
+        date_esc +
+        ";SELECT * FROM relationships WHERE" +
+        " Date > " +
+        prev_date_esc +
+        " AND" +
+        " Date <= " +
+        date_esc;
+      offset = 0;
+    } else {
+      query =
+        " CREATE TEMPORARY TABLE rel_recurse" + //create temp table, result 0
+        " (rel_id INT," +
+        " obj1 INT," +
+        " obj2 INT," +
+        " Date date);";
+      query +=
+        " SET SESSION cte_max_recursion_depth = " +
+        depth_esc +
+        ";" + //set max depth
+        " INSERT INTO rel_recurse" + //insert the values
+        " WITH RECURSIVE CN(rel_id, obj1, obj2, Date) AS" +
+        " ((SELECT -1 AS rel_id, " +
+        id_esc +
+        " AS obj1, " +
+        id_esc +
+        " AS obj2, " +
+        "20200101 AS Date)" +
+        " UNION" +
+        "(SELECT R.rel_id, R.obj1, R.obj2, R.Date" +
+        " FROM relationships R, CN " +
+        " WHERE" +
+        " (CN.obj1 = R.obj1 OR" +
+        " CN.obj2 = R.obj1 OR" +
+        " CN.obj1 = R.obj2 OR" +
+        " CN.obj2 = R.obj2) AND" +
+        " R.Date > " +
+        prev_date_esc +
+        " AND" +
+        " R.Date <= " +
+        date_esc +
+        " )) SELECT * FROM CN" +
+        " ;SELECT DISTINCT node_id, node, community, nodes.Date , nodes.meta FROM nodes" + //obtain nodes
+        " INNER JOIN rel_recurse on node_id = obj1 OR node_id = obj2" +
+        " WHERE nodes.Date >" +
+        prev_date_esc +
+        " AND" +
+        " nodes.Date <=" +
+        date_esc +
+        ";" +
+        " SELECT " +
+        " DISTINCT relationships.Date," +
+        " relationships.obj1," +
+        " relationships.obj2," +
+        " relationships.relation," +
+        " relationships.rel_id," +
+        " relationships.graph_id," +
+        " relationships.meta" +
+        " FROM relationships" + //obtain relationships
+        " INNER JOIN rel_recurse ON" +
+        " rel_recurse.rel_id = relationships.rel_id AND" +
+        " rel_recurse.obj1 = relationships.obj1 AND" +
+        " rel_recurse.obj2 = relationships.obj2" +
+        " WHERE relationships.Date > " +
+        prev_date_esc +
+        " AND" +
+        " relationships.Date <= " +
+        date_esc;
+      offset = 3;
+    }
+    console.log(query);
+    connection.query(query, (errQ, result, fields) => {
+      connection.destroy();
 
-			if (errQ) {
-				defError(res, errQ);
-				return;
-			} else {
-				let json_object = {};
-				const fields = ["nodes", "links"];
+      if (errQ) {
+        defError(res, errQ);
+        return;
+      } else {
+        let json_object = {};
+        const fields = ["nodes", "links"];
 
-				for (let i = 0; i < 2; i++) {
-					if (result[offset + i] != undefined) {
-						json_object[fields[i]] = [];
-						for (const tuple of result[offset + i]) {
-							if (i == 1) {
-								//relationships
+        for (let i = 0; i < 2; i++) {
+          if (result[offset + i] != undefined) {
+            json_object[fields[i]] = [];
+            for (const tuple of result[offset + i]) {
+              if (i == 1) {
+                //relationships
 
-								let formatted = tuple["meta"].replace("'", "''");
+                let formatted = tuple["meta"].replace("'", "''");
 
-								// Replace strange ascii characters
-								formatted = formatted.replace(/[^\u000A\u0020-\u007E]/g, " ");
+                // Replace strange ascii characters
+                formatted = formatted.replace(/[^\u000A\u0020-\u007E]/g, " ");
 
-								var p = JSON.parse(formatted);
-								temp = tuple["meta"];
-								delete tuple["meta"];
+                var p = JSON.parse(formatted);
+                temp = tuple["meta"];
+                delete tuple["meta"];
 
-								var obj = JSON.parse(JSON.stringify(tuple));
-								var keys = Object.keys(p);
+                var obj = JSON.parse(JSON.stringify(tuple));
+                var keys = Object.keys(p);
 
-								for (var j = 0; j < keys.length; j++) {
-									obj[keys[j]] = p[keys[j]];
-								}
-								json_object["links"].push(obj);
-							} else {
-								json_object[fields[i]].push(tuple);
-							}
-						}
-					}
-				}
+                for (var j = 0; j < keys.length; j++) {
+                  obj[keys[j]] = p[keys[j]];
+                }
+                json_object["links"].push(obj);
+              } else {
+                json_object[fields[i]].push(tuple);
+              }
+            }
+          }
+        }
 
-				console.log(json_object);
+        console.log(json_object);
 
-				res.json(json_object);
-			}
-		});
-	});
+        res.json(json_object);
+      }
+    });
+  });
 });
 
 app.post("/api/voteNode", (req, res) => {
