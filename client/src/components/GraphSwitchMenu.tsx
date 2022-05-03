@@ -6,7 +6,7 @@ import { BsCardHeading , BsFilter , BsGear } from 'react-icons/bs';
 import SwitchMenu from './SwitchMenu';
 import NodeDataPage from './NodeDataPage';
 import GraphFilterPage from './GraphFilterPage';
-import GraphSettingsPage from './GraphSettingsPage';
+import GraphGraphsPage from './GraphGraphsPage';
 
 
 const IconText = styled.h1`
@@ -34,6 +34,7 @@ type Props = {
     onIndexChange: (index: number) => void ,
     voteNode: (node: any , vote: boolean) => void,
     focusGraph: (focus: string) => void,
+    setGraph: (id: number, name: string) => void
 }
 
 
@@ -63,7 +64,9 @@ const GraphSwitchMenu: FC <Props> = (props) => {
             communityMembers={props.communityMembers} 
             voteNode={props.voteNode}
         /> ,
-        <GraphSettingsPage />
+        <GraphGraphsPage 
+            setGraph={props.setGraph}
+        />
     ];
 
     // let icons = [
@@ -75,7 +78,7 @@ const GraphSwitchMenu: FC <Props> = (props) => {
     let icons = [
         <IconText> Filter </IconText> ,
         <IconText> Details </IconText> ,
-        <IconText> Settings </IconText>
+        <IconText> Graphs </IconText>
     ]
 
     return (

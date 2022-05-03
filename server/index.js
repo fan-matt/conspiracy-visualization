@@ -4,17 +4,37 @@ const express = require("express");
 const path = require("path");
 const helper = require("./src/helper");
 const bodyParser = require("body-parser");
+const formidable = require("formidable");
+const util = require("util");
+const fs = require("fs");
+const {body, validationResult} = require("express-validator");
 const app = express();
+
 const port = 5000;
+const uploadFolder = path.join(__dirname, "uploaded");
 
 const pool = mysql.createPool({
-  connectionLimit: 10,
-  host: "127.0.0.1",
-  user: "elee",
-  password: "password",
+	connectionLimit: 10,
+	host: "127.0.0.1",
+	user: "elee",
+	password: "password",
 
-  database: "MAINDB",
-  multipleStatements: true,
+	database: "MAINDB",
+	multipleStatements: true,
+	localInfile: true
+});
+
+const ASYNC_mysql = require("mysql-await");
+
+const ASYNC_pool = ASYNC_mysql.createPool({
+	connectionLimit: 10,
+	host: "127.0.0.1",
+	user: "elee",
+	password: "password",
+
+	database: "MAINDB",
+	multipleStatements: true,
+	localInfile: true
 });
 
 app.use(express.static(path.join(__dirname, "build")));
@@ -22,7 +42,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/api/helloworld", (req, res) => {
-  res.send("Hello from the Express Server!");
+	res.send("Hello from the Express Server!");
 });
 
 /* All endpoints will perform type checking for :
@@ -32,74 +52,229 @@ app.get("/api/helloworld", (req, res) => {
  * */
 
 function defError(response, error) {
-  response.json({ Error: error.code });
-  return;
+	response.json({ Error: error.code });
+	return;
 }
 function InvOrMissingParams(response) {
-  response.json({ Error: "Missing or Invalid Parameters" });
-  return;
+	response.json({ Error: "Missing or Invalid Parameters" });
+	return;
 }
 
 app.post("/api/graphDates", (req, res) => {
-  /*
-   * Get every possible graph date, return array
-   *
-   * input:
-   * 	none
-   * output:
-   * {
-   *	dates:[]
-   * }
-   *
-   *
-   * */
-	  pool.getConnection((err, connection) => {
-		if (err) {
+	/*
+	 * Get every possible graph date, return array
+	 *
+	 * input:
+	 * 	none
+	 * output:
+	 * {
+	 *	dates:[]
+	 * }
+	 *
+	 *
+	 * */
+	pool.getConnection((err, connection) => {
+		console.log("Fetching dates");
+    
+    if (err) {
 			defError(res, err);
+      console.log(err);
 			return;
 		}
 		connection.query(
-		"SELECT DISTINCT Date FROM nodes",
-		(errQ, result, fields) => {
-			connection.release();
+			"SELECT DISTINCT Date FROM nodes",
+			(errQ, result, fields) => {
+				connection.release();
 
-			if (errQ) {
-				  defError(res, errQ);
-				  return;
-			} else {
-				  let json_object = {};
-				  const field1 = "Date";
-				  json_object[field1] = [];
+				if (errQ) {
+					defError(res, errQ);
+					return;
+				} else {
+					let json_object = {};
+					const field1 = "Date";
+					json_object[field1] = [];
 
-				  for (const tuple of result) {
-				    json_object[field1].push(tuple.Date);
-				  }
+					for (const tuple of result) {
+						json_object[field1].push(tuple.Date);
+					}
 
-				  res.json(json_object);
-			}
-		});
+					res.json(json_object);
+				}
+			});
 	});
 });
 
+app.get('/tryThis', (req, res) => {
+  res.send(`
+    <h2>With <code>"express"</code> npm package</h2>
+    <form action="/api/storeGraph" enctype="multipart/form-data" method="post">
+      <div>Text field title: <input type="text" name="title" /></div>
+      <div>nodes: <input type="file" name="nodes" /></div>
+      <div>relationships: <input type="file" name="relationships" /></div>
+      <input type="submit" value="Upload" />
+    </form>
+  `);
+});
+
+
+app.get("/api/getStaticGraphList", async (req, res)=>{
+	/*
+	 * no input
+	 *
+	 * output: [list of graph_id and ]
+	 * */
+  console.log("Getting static graphs");
+	const connection = await ASYNC_pool.awaitGetConnection();
+	connection.on("error", (err)=>{
+    console.log("error");
+    console.log(err);
+		defError(res,errP);
+		return;
+	});
+
+	let result = await connection.awaitQuery("SELECT * FROM staticgraphs");
+	connection.release();
+	res.json(result);	
+});
+
+app.post("/api/storeGraph", async (req,res)=>{
+	/* Take the given csv and upload to database
+	 * input: //note how this is not a json object
+	 * 	
+	 * 	title:string
+   *  password:string
+	 *	type: string, //expect "nodes" or "relationships"
+	 *	nodes: FileType
+	 *	relationships: FileType
+	 * 
+	 * */
+	
+  console.log("Graph uploading");
+
+	const form = new formidable.IncomingForm();
+	form.uploadDir = uploadFolder;
+	form.parse(req, async (err, fields, files)=>{
+    console.log('parsing form');
+    console.log('files');
+    console.log(files);
+
+
+
+
+    fs.readdir('C:/Users/FnMat/Desktop/lab/conspiracy-visualization/server/uploaded', (err, files) => {
+      console.log('dir files');
+      if (err) {
+          console.log(err);
+      } else {
+        // files object contains all files names
+        // log them on console
+        files.forEach(file => {
+          console.log(file);
+      });
+      }
+  });
+
+
+
+
+
+		if(err || fields.password !== "greengreen"){
+			InvOrMissingParams(res);
+			return;
+		}
+
+		const connection = await ASYNC_pool.awaitGetConnection();
+		connection.on("error", (err)=>{
+			defError(res,errP);
+			return;
+		});
+		let result = await connection.awaitQuery("SELECT (MIN(graph_id)) -1 AS next_graph_id from staticgraphs");
+		const next_graph_id = result[0]["next_graph_id"];
+    const escapedGraphId = connection.escape(next_graph_id);
+		
+		await connection.awaitBeginTransaction();
+		await connection.awaitQuery("INSERT INTO staticgraphs VALUES (" + connection.escape(next_graph_id) + "," + connection.escape(fields.title) + ")");
+		
+		// let loadLine;
+		// loadLine = "LOAD DATA LOCAL INFILE " + 
+		// 	connection.escape(files.nodes.filepath) + 
+		// 	" INTO TABLE nodes FIELDS TERMINATED BY ','"  + 
+		// 	" OPTIONALLY ENCLOSED BY '\"'" + 
+		// 	" IGNORE 1 LINES" + 
+		// 	" (@dummy, node_id, node, community, date,@dummy2, meta)" + 
+		// 	" SET graph_id = "+ connection.escape(next_graph_id) + ";";
+		// await connection.awaitQuery(loadLine);
+
+
+    // loadLine = "LOAD DATA LOCAL INFILE " + 
+		// 	connection.escape(files.relationships.filepath) + 
+		// 	" INTO TABLE relationships FIELDS TERMINATED BY ','"  + 
+		// 	" OPTIONALLY ENCLOSED BY '\"'" + 
+		// 	" IGNORE 1 LINES" + 
+		// 	" (@dummy, rel_id, obj1, relation, obj2, date,@dummy2, meta)" + 
+		// 	" SET graph_id = " + connection.escape(next_graph_id) + ";";
+		// await connection.awaitQuery(loadLine);
+
+
+
+
+    let loadLine;
+    await connection.awaitQuery('CREATE TEMPORARY TABLE temp_nodes SELECT * FROM nodes LIMIT 0;');
+    await connection.awaitQuery('CREATE TEMPORARY TABLE temp_rels SELECT * FROM relationships LIMIT 0;');
+
+		loadLine = "LOAD DATA LOCAL INFILE " + 
+			connection.escape(files.nodes.filepath) + 
+			" INTO TABLE temp_nodes FIELDS TERMINATED BY ','"  + 
+			" OPTIONALLY ENCLOSED BY '\"'" + 
+			" IGNORE 1 LINES" + 
+			" (@dummy, node_id, node, community, date, graph_id, meta);";
+		await connection.awaitQuery(loadLine);
+
+    await connection.awaitQuery(`UPDATE temp_nodes SET graph_id = ${escapedGraphId};`);
+    await connection.awaitQuery('INSERT INTO nodes SELECT * FROM temp_nodes;');
+
+
+		
+		loadLine = "LOAD DATA LOCAL INFILE " + 
+			connection.escape(files.relationships.filepath) + 
+			" INTO TABLE temp_rels FIELDS TERMINATED BY ','"  + 
+			" OPTIONALLY ENCLOSED BY '\"'" + 
+			" IGNORE 1 LINES" + 
+			" (@dummy, rel_id, obj1, relation, obj2, date, graph_id, meta);";
+		await connection.awaitQuery(loadLine);
+		
+    await connection.awaitQuery(`UPDATE temp_rels SET graph_id = ${escapedGraphId};`);
+    await connection.awaitQuery('INSERT INTO relationships SELECT * FROM temp_rels;');
+
+		await connection.awaitCommit();
+
+		connection.release();
+		res.sendStatus(200);
+	});
+
+});
+
 app.post("/api/staticGraphs", (req, res)=>{
+  console.log("fetching static graphs");
 /* Find nodes and links attached to the given graph_id
- *
- * input:{
- *	graphID: int
- * }
- *
- * output:{
- *	nodes:[node objects],
- *	links:[link objects]
- * }
- *
- * */
- //check for presence of required params
+  *
+  * input:{
+  *	graphID: int
+  * }
+  *
+  * output:{
+  *	nodes:[node objects],
+  *	links:[link objects]
+  * }
+  *
+  * */
+  //check for presence of required params
   if (
     req.body.input == undefined ||
     req.body.input.graphID == undefined
   ) {
     InvOrMissingParams(res);
+    console.log(req.body);
     return;
   }
 
@@ -110,8 +285,8 @@ app.post("/api/staticGraphs", (req, res)=>{
     return;
   }
   if(req.body.input.graphID > -1){
-	InvOrMissingParams(res);
-	return;
+  InvOrMissingParams(res);
+  return;
   }
   pool.getConnection((err, connection) => {
     if (err) {
@@ -120,66 +295,66 @@ app.post("/api/staticGraphs", (req, res)=>{
     }
     const graph_id_esc = connection.escape(req.body.input.graphID);
     connection.query(
-		"SELECT " + 
-	    	"Date, " +
-	    	"node_id, " + 
-	    	"node, " + 
-	    	"community, " + 
-	    	"graph_id" +
-	    	" FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
-	    	"SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
-		(errQ, result, fields) => {
-			const graph_id_esc = connection.escape(req.body.input.graphID);
-			connection.release();
+    "SELECT " + 
+        "Date, " +
+        "node_id, " + 
+        "node, " + 
+        "community, " + 
+        "graph_id" +
+        " FROM nodes WHERE graph_id = " + graph_id_esc + ";" +
+        "SELECT * FROM relationships WHERE graph_id = " + graph_id_esc ,
+    (errQ, result, fields) => {
+      const graph_id_esc = connection.escape(req.body.input.graphID);
+      connection.release();
 
-			if (errQ) {
-				defError(res, errQ);
-				return;
-			} else {
-				let json_object = {};
-			
-				json_object["nodes"] = [];
-				json_object["links"] = [];
-				if (result[0] != undefined) {
-				  for (const tuple of result[0]) {
-				    console.log(tuple);
-				    json_object["nodes"].push(tuple);
-				  }
-				}
-				//relationships
-				json_object["links"] = [];
-				if (result[1] != undefined) {
-				  for (const tuple of result[1]) {
-					if(tuple["meta"] != null && tuple["meta"] != "") {
-				
-					console.log(`unfiltered meta: ${tuple["meta"]}`);
+      if (errQ) {
+        defError(res, errQ);
+        return;
+      } else {
+        let json_object = {};
+      
+        json_object["nodes"] = [];
+        json_object["links"] = [];
+        if (result[0] != undefined) {
+          for (const tuple of result[0]) {
+            console.log(tuple);
+            json_object["nodes"].push(tuple);
+          }
+        }
+        //relationships
+        json_object["links"] = [];
+        if (result[1] != undefined) {
+          for (const tuple of result[1]) {
+          if(tuple["meta"] != null && tuple["meta"] != "") {
+        
+          console.log(`unfiltered meta: ${tuple["meta"]}`);
 
-					// let metaString = String(tuple["meta"]).replaceAll("'", "\"");
-					let metaString = tuple["meta"];
-					metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
-					
-					console.log(`metaString: ${metaString}`);
+          // let metaString = String(tuple["meta"]).replaceAll("'", "\"");
+          let metaString = tuple["meta"];
+          metaString = metaString.replaceAll(/[^\u000A\u0020-\u007E]/g, " ");
+          
+          console.log(`metaString: ${metaString}`);
 
-					let p = JSON5.parse(metaString);
-				    // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
-				    // temp = tuple["meta"];
-					temp = metaString;
-				    delete tuple["meta"];
+          let p = JSON5.parse(metaString);
+            // var p = JSON.parse(tuple["meta"].replace(/'/g, '"'));
+            // temp = tuple["meta"];
+          temp = metaString;
+            delete tuple["meta"];
 
-				    var obj = JSON.parse(JSON.stringify(tuple));
-				    var keys = Object.keys(p);
+            var obj = JSON.parse(JSON.stringify(tuple));
+            var keys = Object.keys(p);
 
-				    for (var i = 0; i < keys.length; i++) {
-				      obj[keys[i]] = p[keys[i]];
-				    }
-				    json_object["links"].push(obj);
-					}
-				  }
-				}
-				res.json(json_object);
-			}
-  		});
-  	});
+            for (var i = 0; i < keys.length; i++) {
+              obj[keys[i]] = p[keys[i]];
+            }
+            json_object["links"].push(obj);
+          }
+          }
+        }
+        res.json(json_object);
+      }
+      });
+    });
 });
 
 app.post("/api/findObject", (req, res) => {
@@ -553,206 +728,206 @@ app.post("/api/neighborhood", (req, res) => {
 });
 
 app.post("/api/voteNode", (req, res) => {
-  /*
-   * vote up or down a node
-   *
-   * input:
-   * {
-   *	id: int
-   *	date: date 	// has to be of the format
-   *		  	// acceptable by Date.parse
-   *	vote: boolean	//true for upvote, false for downvote
-   * }
-   * output:
-   * 	none
-   *
-   * */
-  //check for presence of required params
-  if (
-    req.body.input == undefined ||
-    req.body.input.id == undefined ||
-    req.body.input.date == undefined ||
-    req.body.input.vote == undefined
-  ) {
-    InvOrMissingParams(res);
-    return;
-  }
+	/*
+	 * vote up or down a node
+	 *
+	 * input:
+	 * {
+	 *	id: int
+	 *	date: date 	// has to be of the format
+	 *		  	// acceptable by Date.parse
+	 *	vote: boolean	//true for upvote, false for downvote
+	 * }
+	 * output:
+	 * 	none
+	 *
+	 * */
+	//check for presence of required params
+	if (
+		req.body.input == undefined ||
+		req.body.input.id == undefined ||
+		req.body.input.date == undefined ||
+		req.body.input.vote == undefined
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
 
-  //check for correct types
-  let node_date = new Date(req.body.input.date);
-  if (
-    typeof req.body.input.id != "number" ||
-    node_date == "Invalid Date" ||
-    typeof req.body.input.vote != "boolean"
-  ) {
-    InvOrMissingParams(res);
-    return;
-  }
+	//check for correct types
+	let node_date = new Date(req.body.input.date);
+	if (
+		typeof req.body.input.id != "number" ||
+		node_date == "Invalid Date" ||
+		typeof req.body.input.vote != "boolean"
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
 
-  let prev_date = new Date(req.body.input.date);
-  prev_date.setDate(prev_date.getDate() - 1);
+	let prev_date = new Date(req.body.input.date);
+	prev_date.setDate(prev_date.getDate() - 1);
 
-  pool.getConnection((err, connection) => {
-    if (err) {
-      defError(res, err);
-      return;
-    }
+	pool.getConnection((err, connection) => {
+		if (err) {
+			defError(res, err);
+			return;
+		}
 
-    const id_esc = connection.escape(req.body.input.id);
-    const date_esc = connection.escape(node_date);
-    const prev_date_esc = connection.escape(prev_date);
-    let upOrDown = "";
-    if (req.body.input.vote == true) {
-      upOrDown = "votes = votes + 1";
-    } else {
-      upOrDown = "votes = votes - 1";
-    }
-    let query =
-      "UPDATE node_rating" +
-      " SET " +
-      upOrDown +
-      " WHERE " +
-      " Date > " +
-      prev_date_esc +
-      " AND" +
-      " Date <= " +
-      date_esc +
-      " AND" +
-      " node_id = " +
-      id_esc;
-    connection.query(query, (errQ, result, fields) => {
-      connection.release();
+		const id_esc = connection.escape(req.body.input.id);
+		const date_esc = connection.escape(node_date);
+		const prev_date_esc = connection.escape(prev_date);
+		let upOrDown = "";
+		if (req.body.input.vote == true) {
+			upOrDown = "votes = votes + 1";
+		} else {
+			upOrDown = "votes = votes - 1";
+		}
+		let query =
+			"UPDATE node_rating" +
+			" SET " +
+			upOrDown +
+			" WHERE " +
+			" Date > " +
+			prev_date_esc +
+			" AND" +
+			" Date <= " +
+			date_esc +
+			" AND" +
+			" node_id = " +
+			id_esc;
+		connection.query(query, (errQ, result, fields) => {
+			connection.release();
 
-      if (errQ) {
-        defError(res, errQ);
-        return;
-      } else {
-        res.sendStatus(200); //send status OK
-      }
-    });
-  });
+			if (errQ) {
+				defError(res, errQ);
+				return;
+			} else {
+				res.sendStatus(200); //send status OK
+			}
+		});
+	});
 });
 
 app.post("/api/voteRel", (req, res) => {
-  /*
-   * vote up or down a rel
-   *
-   * input:
-   * {
-   *	id: int		//relID
-   *	date: date 	// has to be of the format
-   *		  	// acceptable by Date.parse
-   *	sourceId: int
-   *	targetId: int
-   * 	vote: boolean	//true for upvote, false for downvote
-   * }
-   * output:
-   * 	none
-   *
-   * */
-  //check for presence of required params
-  if (
-    req.body.input == undefined ||
-    req.body.input.id == undefined ||
-    req.body.input.date == undefined ||
-    req.body.input.sourceId == undefined ||
-    req.body.input.targetId == undefined ||
-    req.body.input.vote == undefined
-  ) {
-    InvOrMissingParams(res);
-    return;
-  }
+	/*
+	 * vote up or down a rel
+	 *
+	 * input:
+	 * {
+	 *	id: int		//relID
+	 *	date: date 	// has to be of the format
+	 *		  	// acceptable by Date.parse
+	 *	sourceId: int
+	 *	targetId: int
+	 * 	vote: boolean	//true for upvote, false for downvote
+	 * }
+	 * output:
+	 * 	none
+	 *
+	 * */
+	//check for presence of required params
+	if (
+		req.body.input == undefined ||
+		req.body.input.id == undefined ||
+		req.body.input.date == undefined ||
+		req.body.input.sourceId == undefined ||
+		req.body.input.targetId == undefined ||
+		req.body.input.vote == undefined
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
 
-  //check for correct types
-  let node_date = new Date(req.body.input.date);
-  if (
-    typeof req.body.input.id != "number" ||
-    node_date == "Invalid Date" ||
-    typeof req.body.input.sourceId != "number" ||
-    typeof req.body.input.targetId != "number" ||
-    typeof req.body.input.vote != "boolean"
-  ) {
-    InvOrMissingParams(res);
-    return;
-  }
+	//check for correct types
+	let node_date = new Date(req.body.input.date);
+	if (
+		typeof req.body.input.id != "number" ||
+		node_date == "Invalid Date" ||
+		typeof req.body.input.sourceId != "number" ||
+		typeof req.body.input.targetId != "number" ||
+		typeof req.body.input.vote != "boolean"
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
 
-  let prev_date = new Date(req.body.input.date);
-  prev_date.setDate(prev_date.getDate() - 1);
+	let prev_date = new Date(req.body.input.date);
+	prev_date.setDate(prev_date.getDate() - 1);
 
-  pool.getConnection((err, connection) => {
-    if (err) {
-      defError(res, err);
-      return;
-    }
+	pool.getConnection((err, connection) => {
+		if (err) {
+			defError(res, err);
+			return;
+		}
 
-    const id_esc = connection.escape(req.body.input.id);
-    const date_esc = connection.escape(node_date);
-    const prev_date_esc = connection.escape(prev_date);
-    const sourceId_esc = connection.escape(req.body.input.sourceId);
-    const targetId_esc = connection.escape(req.body.input.targetId);
+		const id_esc = connection.escape(req.body.input.id);
+		const date_esc = connection.escape(node_date);
+		const prev_date_esc = connection.escape(prev_date);
+		const sourceId_esc = connection.escape(req.body.input.sourceId);
+		const targetId_esc = connection.escape(req.body.input.targetId);
 
-    let upOrDown = "";
-    if (req.body.input.vote == true) {
-      upOrDown = "votes = votes + 1";
-    } else {
-      upOrDown = "votes = votes - 1";
-    }
-    let query =
-      "UPDATE rel_rating" +
-      " SET " +
-      upOrDown +
-      " WHERE" +
-      " Date > " +
-      prev_date_esc +
-      " AND" +
-      " Date <= " +
-      date_esc +
-      " AND" +
-      " obj1 = " +
-      sourceId_esc +
-      " AND" +
-      " obj2 = " +
-      targetId_esc +
-      " AND" +
-      " rel_id = " +
-      id_esc;
-    connection.query(query, (errQ, result, fields) => {
-      connection.release();
+		let upOrDown = "";
+		if (req.body.input.vote == true) {
+			upOrDown = "votes = votes + 1";
+		} else {
+			upOrDown = "votes = votes - 1";
+		}
+		let query =
+			"UPDATE rel_rating" +
+			" SET " +
+			upOrDown +
+			" WHERE" +
+			" Date > " +
+			prev_date_esc +
+			" AND" +
+			" Date <= " +
+			date_esc +
+			" AND" +
+			" obj1 = " +
+			sourceId_esc +
+			" AND" +
+			" obj2 = " +
+			targetId_esc +
+			" AND" +
+			" rel_id = " +
+			id_esc;
+		connection.query(query, (errQ, result, fields) => {
+			connection.release();
 
-      if (errQ) {
-        defError(res, errQ);
-        return;
-      } else {
-        res.sendStatus(200); //send status OK
-      }
-    });
-  });
+			if (errQ) {
+				defError(res, errQ);
+				return;
+			} else {
+				res.sendStatus(200); //send status OK
+			}
+		});
+	});
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+	res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 const server = app.listen(port, () =>
-  console.log(`Listening at http://localhost:${port}`)
+	console.log(`Listening at http://localhost:${port}`)
 );
 
 process.on("SIGINT", () => {
-  console.log("Closing Pool.");
-  pool.end((err) => {
-    if (err) {
-      console.log(err);
-    }
-    console.log("Pool Closed.");
-  });
-  console.log("Closing Server.");
-  server.close((err) => {
-    if (err) {
-      console.log(err);
-    }
-    console.log("Server Closed.");
-  });
-  process.exitCode = 0;
+	console.log("Closing Pool.");
+	pool.end((err) => {
+		if (err) {
+			console.log(err);
+		}
+		console.log("Pool Closed.");
+	});
+	console.log("Closing Server.");
+	server.close((err) => {
+		if (err) {
+			console.log(err);
+		}
+		console.log("Server Closed.");
+	});
+	process.exitCode = 0;
 });
 
 /*

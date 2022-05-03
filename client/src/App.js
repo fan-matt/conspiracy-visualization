@@ -143,6 +143,9 @@ function App() {
   }
 
   function processGraph(graphJson) {
+    console.log("processing graphs");
+    console.log(graphJson);
+
     // Set id field and source/target
     let nodes = graphJson.nodes;
     let links = graphJson.links;
@@ -324,6 +327,26 @@ function focusGraph(focus) {
   setFocusString(focus);
 }
 
+
+async function setGraph(id, name) {
+  console.log("Setting graph with id " + id);
+
+  setGraphDate(name)
+
+  const response = await fetch("./api/staticGraphs", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ input: {graphID: id} }),
+  });
+
+  const graph = await response.json();;
+
+  setData(processGraph(graph));
+}
+
+
   return (
     <div className="App">
       <MainLayout date={graphDate}>
@@ -360,6 +383,7 @@ function focusGraph(focus) {
               updateSubgraph={updateSubgraph}
               voteNode={voteNode}
               focusGraph={focusGraph}
+              setGraph={setGraph}
             />
             <Footer />
           </MenuAndFooter>
