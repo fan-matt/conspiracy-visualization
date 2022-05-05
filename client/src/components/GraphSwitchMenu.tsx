@@ -1,13 +1,11 @@
-import { FC } from 'react';
 import styled from 'styled-components';
-import { NodeObject } from 'react-force-graph-2d';
-import { BsCardHeading , BsFilter , BsGear } from 'react-icons/bs';
 
 import SwitchMenu from './SwitchMenu';
 import NodeDataPage from './NodeDataPage';
 import GraphFilterPage from './GraphFilterPage';
 import GraphGraphsPage from './GraphGraphsPage';
 
+import { NeighborhoodSearchSettings, Node, RawNode } from './../types';
 
 const IconText = styled.h1`
     font-family: 'Courier New', Courier, monospace;
@@ -16,23 +14,19 @@ const IconText = styled.h1`
 
 
 type Props = {
-    currentNode: any ,
-    setCurrentNode: (node: any) => void ,
-    updateSubgraph: (settings: {
-        id: number ,
-        date: string ,
-        depth: number
-    } , nodeId: number) => void ,
-    communityMembers: any[] ,
+    currentNode: Node | undefined ,
+    setCurrentNode: (node: Node) => void ,
+    updateSubgraph: (settings: NeighborhoodSearchSettings , nodeId: number) => void ,
+    getCommunityMembers: (node: Node) => Array<Node>,
     filters: {
         keywords: string ,
     }
     setFilters: (field: string , value: string) => void ,
     filter: () => void ,
-    searchedNodes: any[] ,
+    searchedNodes: Array<RawNode> ,
     pageIndex: number ,
     onIndexChange: (index: number) => void ,
-    voteNode: (node: any , vote: boolean) => void,
+    voteNode: (node: Node , vote: boolean) => void,
     focusGraph: (focus: string) => void,
     setGraph: (id: number, name: string) => void
 }
@@ -47,33 +41,30 @@ type Props = {
         onIndexChange - callback that is called when the index of the page changes
         currentNode - current node object
 */
-const GraphSwitchMenu: FC <Props> = (props) => {
+const GraphSwitchMenu = ({ currentNode, setCurrentNode, updateSubgraph, getCommunityMembers, 
+    filters, setFilters, filter, searchedNodes, pageIndex, onIndexChange, voteNode, 
+    focusGraph, setGraph }: Props) => {
+
     let pages = [
         <GraphFilterPage 
-            filters={props.filters} 
-            setFilters={props.setFilters} 
-            filter={props.filter} 
-            searchedNodes={props.searchedNodes} 
-            updateSubgraph={props.updateSubgraph} 
-            focusGraph={props.focusGraph}
+            filters={filters} 
+            setFilters={setFilters} 
+            filter={filter} 
+            searchedNodes={searchedNodes} 
+            updateSubgraph={updateSubgraph} 
+            focusGraph={focusGraph}
         /> ,
         <NodeDataPage 
-            node={props.currentNode} 
-            updateNode={props.setCurrentNode} 
-            updateSubgraph={props.updateSubgraph} 
-            communityMembers={props.communityMembers} 
-            voteNode={props.voteNode}
+            node={currentNode} 
+            updateNode={setCurrentNode} 
+            updateSubgraph={updateSubgraph} 
+            getCommunityMembers={getCommunityMembers} 
+            voteNode={voteNode}
         /> ,
         <GraphGraphsPage 
-            setGraph={props.setGraph}
+            setGraph={setGraph}
         />
     ];
-
-    // let icons = [
-    //     <BsCardHeading /> ,
-    //     <BsFilter /> ,
-    //     <BsGear /> ,
-    // ];
 
     let icons = [
         <IconText> Filter </IconText> ,
@@ -83,13 +74,12 @@ const GraphSwitchMenu: FC <Props> = (props) => {
 
     return (
         <SwitchMenu
-            pageIndex={props.pageIndex}
-            onIndexChange={props.onIndexChange}
+            pageIndex={pageIndex}
+            onIndexChange={onIndexChange}
             pages={pages}
             icons={icons}
         />
     );
 }
-
 
 export default GraphSwitchMenu;

@@ -7,9 +7,12 @@ const StyledLabel = styled.label`
     display: block;
 `;
 
+type Props = {
+    children: React.ReactNode;
+};
 
-export default function Label(props) {
+export default function Label({children, ...props}: Props) {
     return(
-        <StyledLabel {... props}> {props.children} </StyledLabel>
+        <StyledLabel {... props}> {children} </StyledLabel>
     );
 }

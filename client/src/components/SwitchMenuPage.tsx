@@ -10,23 +10,11 @@ const StyledSwitchMenuPage = styled.div`
     overflow-x: auto;
     padding: 50px;
     overflow-wrap: break-word;
-
-    /* h2 {
-        font-weight: bold;
-        font-size: 20px;
-        margin-bottom: 15px;
-    }
-
-    h3 {
-        font-size: 20px;
-        line-height: 30px;
-        margin-bottom: 45px;
-    } */
 `;
 
 
 type Props = {
-    children: any
+    children: React.ReactNode
 }
 
 

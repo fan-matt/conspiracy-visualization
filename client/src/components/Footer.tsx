@@ -1,6 +1,4 @@
-import React from 'react';
 import styled from 'styled-components';
-
 
 let StyledFooter = styled.div`
     width: 100%;
@@ -14,10 +12,12 @@ let StyledFooter = styled.div`
 `;
 
 
-export default function Footer(props) {
+const Footer = () => {
     return (
         <StyledFooter>
-            Complex Networks Group at UCLA, 2021
+            Complex Networks Group at UCLA, { new Date().getFullYear() }
         </StyledFooter>
     );
-}
+};
+
+export default Footer;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import SwitchMenuPage from './SwitchMenuPage';
 
@@ -57,9 +57,9 @@ const GraphGraphsPage = ({ setGraph }: Props) => {
         fetchGraphs();
     }, []);
 
-    const graphElements = graphIds.map((graph) => {
+    const graphElements = graphIds.map((graph, i) => {
         return(
-            <StyledGraph onClick={() => {
+            <StyledGraph key={`customGraph${i}`} onClick={() => {
                 setGraph(graph.graph_id, graph.title);
             }}>
                 <h1> {graph.title} </h1>
@@ -72,10 +72,9 @@ const GraphGraphsPage = ({ setGraph }: Props) => {
             <h1 style={{fontWeight: 'bold' , marginBottom: '40px'}}> Static Graphs: ({graphElements.length}) </h1>    
             
             {graphElements.length !== 0 ? 
-                <ScrollContainer maxHeight={300}>
+                <ScrollContainer maxheight={300}>
                     {graphElements}
                 </ScrollContainer>
-
                 : <> </>
             }
 

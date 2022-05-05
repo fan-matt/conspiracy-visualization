@@ -11,13 +11,14 @@
     "@types/node": "^15.0.2",
     "@types/react": "^17.0.5",
     "@types/react-dom": "^17.0.3",
+    "@types/react-split-pane": "^0.1.67",
     "immutable": "^4.0.0-rc.12",
     "react": "^17.0.2",
     "react-calendar": "^3.4.0",
     "react-dom": "^17.0.2",
     "react-force-graph-2d": "^1.23.2",
     "react-icons": "^4.2.0",
-    "react-scripts": "4.0.2",
+    "react-scripts": "5.0.0",
     "react-scrollbars-custom": "^4.0.25",
     "react-split-pane": "^0.1.92",
     "react-toastify": "^7.0.4",
@@ -26,7 +27,6 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -50,11 +50,8 @@
       "last 1 safari version"
     ]
   },
-  "resolutions": {
-    "bezier-js": "4.0.3"
-  },
   "proxy": "http://localhost:5000",
   "devDependencies": {
-    "@types/styled-components": "^5.1.9"
+    "@types/styled-components": "^5.1.25"
   }
 }

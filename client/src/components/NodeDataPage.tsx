@@ -10,15 +10,16 @@ import Input from "./Input";
 import Button from "./Button";
 
 import SwitchMenuPage from "./SwitchMenuPage";
+import { Node, Link, NeighborhoodSearchSettings } from "../types";
 
-const IndicatorDot = styled.div`
-  height: ${(props) => props.size};
-  width: ${(props) => props.size};
-  border-radius: ${(props) => "calc(" + props.size + " / 2)"};
-  background-color: ${(props) => props.color};
-  display: inline-block;
-  margin-left: 20px;
-`;
+// const IndicatorDot = styled.div<{ size: number }>`
+//   height: ${(props) => props.size};
+//   width: ${(props) => props.size};
+//   border-radius: ${(props) => "calc(" + props.size + " / 2)"};
+//   background-color: ${(props) => props.color};
+//   display: inline-block;
+//   margin-left: 20px;
+// `;
 
 const StyledPage = styled.div`
   line-height: 18px;
@@ -35,6 +36,7 @@ const StyledPage = styled.div`
 
 const FormLabel = styled(Label)`
   margin-bottom: 10px;
+  marginTop: 20px;
 `;
 
 const FormInput = styled(Input)`
@@ -72,17 +74,17 @@ const RelationLink = styled.div`
   margin: 5px 5px;
 `;
 
-const CommunityMember = styled.div`
-  color: cornflowerblue;
-  cursor: pointer;
-  transition: 0.3s;
-  border-radius: 5px;
-  padding: 10px 5px;
+// const CommunityMember = styled.div`
+//   color: cornflowerblue;
+//   cursor: pointer;
+//   transition: 0.3s;
+//   border-radius: 5px;
+//   padding: 10px 5px;
 
-  &:hover {
-    background-color: darkslategray;
-  }
-`;
+//   &:hover {
+//     background-color: darkslategray;
+//   }
+// `;
 
 /*
     A page that displays details about a node
@@ -90,23 +92,32 @@ const CommunityMember = styled.div`
     Props:
         node - a node object to display information about
 */
-export default function NodeDataPage(props) {
+
+type Props = {
+  node: Node | undefined;
+  updateNode: (node: Node) => void;
+  getCommunityMembers: (node: Node) => Array<Node>;
+  updateSubgraph: (settings: NeighborhoodSearchSettings, nodeId: number) => void;
+  voteNode: (node: Node, vote: boolean) => void;
+}
+
+const NodeDataPage = ({ node, updateNode, getCommunityMembers, updateSubgraph, voteNode }: Props) => {
   const [searchDepth, setSearchDepth] = useState(4);
   const [showRelations, setShowRelations] = useState(false);
-  const [showCommunity, setShowCommunity] = useState(false);
+  // const [showCommunity, setShowCommunity] = useState(false);
 
-  let relations = <> </>;
+  let relations: Array<React.ReactNode> = [<> </>];
 
-  if (props.node) {
-    relations = props.node.links.map((link) => {
+  if (node) {
+    relations = node.links.map((link: Link, i) => {
       return (
-        <RelationView>
-          <RelationNode onClick={() => props.updateNode(link.source)}>
+        <RelationView key={`rel${i}`}>
+          <RelationNode onClick={() => updateNode(link.source)}>
             {" "}
             {`${link.arg1} (${link.source.node})`}
           </RelationNode>
           <RelationLink> {`>> ${link.rel} >>`} </RelationLink>
-          <RelationNode onClick={() => props.updateNode(link.target)}>
+          <RelationNode onClick={() => updateNode(link.target)}>
             {" "}
             {`${link.arg2} (${link.target.node})`}
           </RelationNode>
@@ -117,18 +128,18 @@ export default function NodeDataPage(props) {
     });
   }
 
-  let cMembers = <> </>;
+  // let cMembers: Array<React.ReactNode> = [<> </>];
 
-  if (props.node) {
-    cMembers = props.communityMembers(props.node).map((n) => {
-      return (
-        <CommunityMember onClick={() => props.updateNode(n)}>
-          {" "}
-          {n.node}{" "}
-        </CommunityMember>
-      );
-    });
-  }
+  // if (node) {
+  //   cMembers = getCommunityMembers(node).map((n: Node) => {
+  //     return (
+  //       <CommunityMember onClick={() => updateNode(n)}>
+  //         {" "}
+  //         {n.node}{" "}
+  //       </CommunityMember>
+  //     );
+  //   });
+  // }
 
   let pageContent = <> </>;
 
@@ -137,7 +148,7 @@ export default function NodeDataPage(props) {
     height: "100%",
   };
 
-  if (props.node === null) {
+  if (!node) {
     pageStyle = Object.assign(pageStyle, {
       display: "flex",
       flexDirection: "column",
@@ -153,33 +164,33 @@ export default function NodeDataPage(props) {
       </React.Fragment>
     );
   } else {
-    let communityName = (members) => {
-      let maxNeighbors = -1;
-      let name = "";
+    // let communityName = (members: Array<Node>) => {
+    //   let maxNeighbors = -1;
+    //   let name = "";
 
-      console.log("members");
-      console.log(members);
+    //   console.log("members");
+    //   console.log(members);
 
-      members.forEach((member) => {
-        if (member.neighbors.length >= maxNeighbors) {
-          maxNeighbors = member.neighbors.length;
-          name = member.node;
-        }
-      });
+    //   members.forEach((member) => {
+    //     if (member.neighbors.length >= maxNeighbors) {
+    //       maxNeighbors = member.neighbors.length;
+    //       name = member.node;
+    //     }
+    //   });
 
-      return name;
-    };
+    //   return name;
+    // };
 
     let metaData;
 
-    if(props.node.meta) {
-      metaData = JSON.parse(props.node.meta);
+    if(node.meta) {
+      metaData = JSON.parse(node.meta);
     }
 
     pageContent = (
       <React.Fragment>
         <h2> Node: </h2>
-        <h3> {props.node.node} </h3>
+        <h3> {node.node} </h3>
 
         <h2 style={{ marginTop: "20px" }}> Weight: </h2>
         <h3> {metaData?.weight} </h3>
@@ -195,7 +206,7 @@ export default function NodeDataPage(props) {
                 <h2> Community Members: ({cMembers.length}) </h2> 
                 <Button onClick={() => setShowCommunity(!showCommunity)}> Toggle Visibility </Button>
                 <div style={{margin: '10px 0' , display: 'block'}}></div>
-                {showCommunity ? <ScrollContainer maxHeight={300}> {cMembers} </ScrollContainer> : <> </>} */}
+                {showCommunity ? <ScrollContainer maxheight={300}> {cMembers} </ScrollContainer> : <> </>} */}
 
         <h2 style={{ marginTop: "20px" }}>
           {" "}
@@ -207,7 +218,7 @@ export default function NodeDataPage(props) {
         </Button>
         <div style={{ margin: "10px 0", display: "block" }}></div>
         {showRelations ? (
-          <ScrollContainer maxHeight={300}> {relations} </ScrollContainer>
+          <ScrollContainer maxheight={300}> {relations} </ScrollContainer>
         ) : (
           <> </>
         )}
@@ -215,22 +226,23 @@ export default function NodeDataPage(props) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            props.updateSubgraph(
+            updateSubgraph(
               {
-                id: props.node.id,
-                date: props.node.Date,
+                id: node.id,
+                date: node.Date,
                 depth: searchDepth,
               },
-              props.node.id
+              node.id
             );
           }}
         >
-          <FormLabel style={{ marginTop: "20px" }}> Search Depth </FormLabel>
+          <FormLabel> Search Depth </FormLabel>
           <FormInput
             type="text"
             value={searchDepth}
-            onInput={(e) => {
-              setSearchDepth(Number(e.target.value));
+            onInput={(e: React.FormEvent<HTMLInputElement>) => {
+              let eventTarget = e.target as HTMLInputElement;
+              setSearchDepth(Number(eventTarget.value));
             }}
           />
           <FormButton> Search </FormButton>
@@ -245,7 +257,7 @@ export default function NodeDataPage(props) {
         >
           <Button
             onClick={() => {
-              props.voteNode(props.node, true);
+              voteNode(node, true);
               toast.dark("Upvoted!", {
                 position: "bottom-center",
                 autoClose: 5000,
@@ -262,7 +274,7 @@ export default function NodeDataPage(props) {
 
           <Button
             onClick={() => {
-              props.voteNode(props.node, false);
+              voteNode(node, false);
               toast.dark("Downvoted!", {
                 position: "bottom-center",
                 autoClose: 5000,
@@ -299,3 +311,5 @@ export default function NodeDataPage(props) {
     </SwitchMenuPage>
   );
 }
+
+export default NodeDataPage;

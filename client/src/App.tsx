@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Map } from "immutable";
 
 import MainLayout from "./layouts/MainLayout";
 import GraphViewer from "./components/GraphViewer";
@@ -9,7 +8,8 @@ import GraphSwitchMenu from "./components/GraphSwitchMenu";
 import Footer from "./components/Footer";
 
 import { formatDate } from "./util/util";
-import { nodeModuleNameResolver } from "typescript";
+
+import { Node, Link, RawGraphData, GraphData, GraphFilter, NeighborhoodSearchSettings, ObjectSearchSettings, RawNode, RawLink } from "./types";
 
 /*
     Currently, this is everything to the right of the graph visualization
@@ -27,14 +27,14 @@ let MenuAndFooter = styled.div`
     Props:
         N/A
 */
-function App() {
+const App = () => {
   const [splitWidth, setSplitWidth] = useState(window.innerWidth);
   const [graphWidth, setGraphWidth] = useState((splitWidth / 3) * 2);
   const [graphHeight, setGraphHeight] = useState(window.innerHeight - 100);
-  const [currentNode, setCurrentNode] = useState(null);
+  const [currentNode, setCurrentNode] = useState<Node | undefined>(undefined);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [data, setData] = useState({ nodes: [], links: [] });
-  const [graphDate, setGraphDate] = useState(undefined);
+  const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
+  const [graphDate, setGraphDate] = useState<string>('');
 
   const [focusString, setFocusString] = useState("");
 
@@ -43,19 +43,9 @@ function App() {
     links: [],
   });
 
-  const [neighborhoodSettings, setNeighborhoodSettings] = useState(
-    Map({ id: -1, date: "", depth: -1 })
-  );
-
-  const [findObjectSettings, setFindObjectSettings] = useState(
-    Map({ communities: [], keywords: [] })
-  );
-
-  const [graphDates, setGraphDates] = useState([]);
-
-  const [graphFilters, setGraphFilters] = useState({
-    keywords: [],
-    communities: [],
+  const [graphFilters, setGraphFilters] = useState<GraphFilter>({
+    keywords: '',
+    communities: '',
   });
 
   useEffect(() => {
@@ -80,11 +70,6 @@ function App() {
 
       console.log("latest date");
       console.log(latestDate);
-
-      setNeighborhoodSettings(neighborhoodSettings.set("date", latestDate));
-
-      console.log("neighborhood settings state");
-      console.log(neighborhoodSettings.toObject());
 
       const subgraph = await fetchNeighborhood({
         id: 1,
@@ -113,9 +98,9 @@ function App() {
     return dates;
   }
 
-  async function fetchNeighborhood(settings) {
+  async function fetchNeighborhood(settings: NeighborhoodSearchSettings) {
     console.log("in fetchNeighborhood");
-    console.log(neighborhoodSettings.toObject());
+    // console.log(neighborhoodSettings.toObject());
 
     const response = await fetch("./api/neighborhood", {
       method: "POST",
@@ -129,7 +114,7 @@ function App() {
     return subgraph;
   }
 
-  async function fetchObjects(settings) {
+  async function fetchObjects(settings: ObjectSearchSettings) {
     const response = await fetch("./api/findObject", {
       method: "POST",
       headers: {
@@ -142,46 +127,75 @@ function App() {
     return objects;
   }
 
-  function processGraph(graphJson) {
+  function processGraph(graphJson: RawGraphData): GraphData {
     console.log("processing graphs");
     console.log(graphJson);
 
     // Set id field and source/target
-    let nodes = graphJson.nodes;
-    let links = graphJson.links;
+    let rawNodes = graphJson.nodes;
+    let rawLinks = graphJson.links;
 
-    nodes.forEach((node) => {
-      node.id = node.node_id;
-      delete node.node_id;
+    let nodes: Array<Node> = [];
+    let links: Array<Link> = [];
 
-      node.neighbors = [];
-      node.links = [];
+    rawNodes.forEach((node: RawNode) => {
+      let newNode: Node = {
+        id: node.node_id,
+        node: node.node,
+        neighbors: [],
+        links: [],
+        Date: node.Date,
+        community: node.community,
+        meta: node.meta,
+      };
+
+      // Get the rest of the props
+      for (let [key, value] of Object.entries(node)) {
+        newNode[key] = value;
+      }
+
+      nodes.push(newNode);
     });
 
-    links.forEach((link) => {
-      link.id = link.rel_id;
-      delete link.rel_id;
+    rawLinks.forEach((link: RawLink) => {
+      let source = nodes.find((node) => node.id === link.obj1);
+      let target = nodes.find((node) => node.id === link.obj2);
 
-      link.source = nodes.find((node) => node.id === link.obj1);
-      link.target = nodes.find((node) => node.id === link.obj2);
+      let newLink: Link = {
+        id: link.rel_id,
+        source: source ? source : nodes[0],
+        target: target ? target : nodes[0],
+        arg1: link.arg1,
+        arg2: link.arg2,
+        rel: link.rel,
+        sentence: link.sentence,
+        Date: link.Date
+      };
 
-      if (link.source && link.target) {
-        link.source.neighbors.push(link.target);
-        link.source.links.push(link);
+      // Get the rest of the props
+      for (let [key, value] of Object.entries(link)) {
+        newLink[key] = value;
+      }
 
-        if (link.source !== link.target) {
-          link.target.neighbors.push(link.source);
-          link.target.links.push(link);
+      if (newLink.source && newLink.target) {
+        newLink.source.neighbors.push(newLink.target);
+        newLink.source.links.push(newLink);
+
+        if (newLink.source !== newLink.target) {
+          newLink.target.neighbors.push(newLink.source);
+          newLink.target.links.push(newLink);
         } else {
-          link.curvature = 3;
+          newLink.curvature = 3;
         }
       }
+
+      links.push(newLink);
     });
 
     return { nodes: nodes, links: links };
   }
 
-  async function updateSubgraph(settings, focus) {
+  async function updateSubgraph(settings: NeighborhoodSearchSettings, focus: number) {
     console.log("settings");
     console.log(settings);
 
@@ -217,42 +231,45 @@ function App() {
         This is what gets called when the SplitPane bar is
         moved to resize the panes but not the component
     */
-  function onSplitResize(size) {
+  function onSplitResize(size: number) {
     setGraphWidth(size);
   }
 
-  function onNodeClick(node, event) {
+  function onNodeClick(node: Node | undefined) {
     setCurrentNode(node);
   }
 
-  function onPageChange(newIndex) {
+  function onPageChange(newIndex: number) {
     setCurrentPageIndex(newIndex);
   }
 
-  function setGraphFilter(field, value) {
-    let filterCopy = Object.assign({}, graphFilters);
-    filterCopy[field] = value;
-    setGraphFilters(filterCopy);
+  function setGraphFilter(field: string, value: string) {
+    let filterCopy: GraphFilter = Object.assign({}, graphFilters);
+
+    if(field === 'keywords' || field === 'communities') {
+      filterCopy[field] = value;
+      setGraphFilters(filterCopy);
+    }
   }
 
   async function filterGraph() {
     console.log("graphFilters");
     console.log(graphFilters);
 
-    let newFilter = Object.assign({}, graphFilters);
-    newFilter.keywords = graphFilters.keywords.split(";");
+    // let newFilter = Object.assign({}, graphFilters);
+    // newFilter.keywords = graphFilters.keywords.split(";");
 
-    const objects = await fetchObjects(newFilter);
+    const objects = await fetchObjects(graphFilters);
     setSearchedObjects(objects);
     console.log(searchedObjects);
     // fetchGraph();
   }
 
-  function communityMembers(node) {
-    return data.nodes.filter((n) => n.community === node.community);
+  function getCommunityMembers(node: Node) {
+    return data.nodes.filter((n: Node) => n.community === node.community);
   }
 
-  async function voteNode(node, vote) {
+  async function voteNode(node: Node, vote: boolean) {
     const max_neighbors = 20;
     const neighbors = node.links.length; // Yes yes this is sloppy (and incorrect) but it's "correct enough"
 
@@ -260,11 +277,11 @@ function App() {
 
     for (let i = 0; i < neighborLimit; i++) {
       let link = node.links[i];
-      let neighbor = node.id === link.source.id ? link.target : link.source;
+      let neighbor = node.id === link.source?.id ? link.target : link.source;
 
       const payload = {
-        id: neighbor.id,
-        date: neighbor.Date,
+        id: neighbor?.id,
+        date: neighbor?.Date,
         vote: vote,
       };
 
@@ -283,8 +300,8 @@ function App() {
       const linkPayload = {
         id: link.id,
         date: link.Date,
-        sourceId: link.obj1,
-        targetId: link.obj2,
+        sourceId: link.source?.id,
+        targetId: link.source?.id,
         vote: vote,
       };
 
@@ -298,19 +315,8 @@ function App() {
     }
   }
 
-function arrayExistsIn(arr, str) {
-  let result = false;;
 
-  arr.forEach(element => {
-    if(str.indexOf(element) > -1) {
-      result = true;
-    }
-  });
-
-  return result;
-}
-
-function focusGraph(focus) {
+function focusGraph(focus: string) {
   // let focusArray = focus.split(";");
 
   // let dataCopy = Object.assign({}, data);
@@ -328,7 +334,7 @@ function focusGraph(focus) {
 }
 
 
-async function setGraph(id, name) {
+async function setGraph(id: number, name: string) {
   console.log("Setting graph with id " + id);
 
   setGraphDate(name)
@@ -349,7 +355,7 @@ async function setGraph(id, name) {
 
   return (
     <div className="App">
-      <MainLayout date={graphDate}>
+      <MainLayout label={graphDate}>
         <StyledSplitPane
           split="vertical"
           minSize={200}
@@ -375,7 +381,7 @@ async function setGraph(id, name) {
               setCurrentNode={(node) => {
                 setCurrentNode(node);
               }}
-              communityMembers={communityMembers}
+              getCommunityMembers={getCommunityMembers}
               filters={graphFilters}
               setFilters={setGraphFilter}
               filter={filterGraph}

@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 
 
@@ -31,12 +30,18 @@ const StyledOption = styled.option`
 `;
 
 
-export default function Dropdown(props) {
-    let options = props.options.map((option , i) => <StyledOption key={String(i) + ' dropdown'}> {option} </StyledOption>)
+type Props = {
+    options: Array<string>;
+};
+
+const Dropdown = ({ options, ...props }: Props) => {
+    let mappedOptions = options.map((option , i) => <StyledOption key={String(i) + ' dropdown'}> {option} </StyledOption>)
 
     return(
         <StyledSelect {... props}>
-            {options}
+            {mappedOptions}
         </StyledSelect>
     );
 }
+
+export default Dropdown;

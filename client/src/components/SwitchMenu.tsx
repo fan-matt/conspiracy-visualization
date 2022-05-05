@@ -1,6 +1,6 @@
-import React from 'react';
 import styled from 'styled-components';
 import { IconContext } from 'react-icons';
+import React from 'react';
 
 
 let StyledSwitchMenu = styled.div`
@@ -38,7 +38,7 @@ const MenuButton = styled.div`
     cursor: pointer;
 `;
 
-const MenuButtonIndicator = styled.div`
+const MenuButtonIndicator = styled.div<{ current: boolean }>`
     position: absolute;
     top: 0;
     width: 100%;
@@ -59,16 +59,23 @@ const MenuButtonIndicator = styled.div`
         onIndexChange - callback that is called when the index of the page changes. 
                         Takes a single argument "index" which is the new page index
 */
-export default function SwitchMenu(props) {
+type Props = {
+    icons: Array<React.ReactNode>;
+    pageIndex: number;
+    onIndexChange: (index: number) => void;
+    pages: Array<React.ReactNode>;
+};
 
-    let menuButtons = props.icons.map((icon , index) => 
-        <MenuButton onClick={() => props.onIndexChange(index)} key={'switchMenuButton' + index}> 
-            <MenuButtonIndicator current={index === props.pageIndex} /> 
+const SwitchMenu = ({ icons, pageIndex, onIndexChange, pages }: Props) => {
+
+    let menuButtons = icons.map((icon , index) => 
+        <MenuButton onClick={() => onIndexChange(index)} key={'switchMenuButton' + index}> 
+            <MenuButtonIndicator current={index === pageIndex} /> 
             {icon} 
         </MenuButton>);
 
     return (
-        <StyledSwitchMenu className={props.className}>
+        <StyledSwitchMenu>
             {/* Configuration: https://github.com/react-icons/react-icons */}
             <IconContext.Provider value={{color: '#f7f7f7' , size: '25px'}}>
                 <StyledMenuBar>
@@ -77,7 +84,9 @@ export default function SwitchMenu(props) {
             </IconContext.Provider>
 
 
-            {props.pages[props.pageIndex]}
+            {pages[pageIndex]}
         </StyledSwitchMenu>
     );
 }
+
+export default SwitchMenu;

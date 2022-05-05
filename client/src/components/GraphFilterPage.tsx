@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 import SwitchMenuPage from './SwitchMenuPage';
@@ -8,6 +8,7 @@ import Button from './Button';
 import ScrollContainer from './ScrollContainer';
 
 import { formatDate } from './../util/util';
+import { NeighborhoodSearchSettings, RawNode } from './../types';
 
 
 const FormLabel = styled(Label)`
@@ -45,11 +46,7 @@ const StyledSearch = styled.div`
 
 
 type Props = {
-        updateSubgraph: (settings: {
-            id: number ,
-            date: string ,
-            depth: number
-        } , nodeId: number) => void ,
+        updateSubgraph: (settings: NeighborhoodSearchSettings , nodeId: number) => void ,
 
         filters: {
             keywords: string ,
@@ -57,31 +54,31 @@ type Props = {
         setFilters: (field: string , value: string) => void ,
         focusGraph: (focus: string) => void,
         filter: () => void ,
-        searchedNodes: any[]
+        searchedNodes: Array<RawNode>
 };
 
 
-const GraphFilterPage: FC<Props> = (props) => {
+const GraphFilterPage = ({ updateSubgraph, filters, setFilters, focusGraph, filter, searchedNodes}: Props) => {
 
-    let searchedNodes = props.searchedNodes.slice();
+    let searchedNodesList = searchedNodes.slice();
 
     const [focus, setFocus] = useState("");
 
-    searchedNodes.sort((a , b) => {
+    searchedNodesList.sort((a , b) => {
         const dateA = new Date(a.Date);
         const dateB = new Date(b.Date);
 
         return dateA.valueOf() - dateB.valueOf();
     }).reverse();
 
-    if(searchedNodes.length >= 80) {
-        searchedNodes.length = 80;
+    if(searchedNodesList.length >= 80) {
+        searchedNodesList.length = 80;
     }
 
-    let searchResults = searchedNodes.map((node) => {
+    let searchResults = searchedNodesList.map((node, i) => {
         return(
-            <StyledSearch onClick={() => {
-                props.updateSubgraph({
+            <StyledSearch key={`nodeSearch${i}`} onClick={() => {
+                updateSubgraph({
                     id: node.node_id ,
                     date: node.Date ,
                     depth: -1
@@ -97,12 +94,17 @@ const GraphFilterPage: FC<Props> = (props) => {
         <SwitchMenuPage>
             <form onSubmit={(e) => {
                 e.preventDefault();
-                props.focusGraph(focus);
+                focusGraph(focus);
             }}>
                 <FormLabel> Focus (delimit with semicolon) </FormLabel>
                 <FormInput 
                     type='text' 
-                    onInput={(e) => setFocus(e.target.value)} 
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                        {
+                            let eTarget = e.target as HTMLInputElement;
+                            setFocus(eTarget.value);
+                        }
+                    } 
                     autoFocus     
                 />
 
@@ -114,17 +116,22 @@ const GraphFilterPage: FC<Props> = (props) => {
             <form onSubmit={(e) => {
                 e.preventDefault();
                 
-                if(props.filters.keywords !== '') {
-                    console.log(props.filters.keywords);
+                if(filters.keywords !== '') {
+                    console.log(filters.keywords);
 
-                    props.filter();
+                    filter();
                 }
             }}>
                 <FormLabel> Keywords (delimit with semicolon) </FormLabel>
                 <FormInput 
                     type='text' 
-                    value={props.filters.keywords} 
-                    onInput={(e) => props.setFilters('keywords' , e.target.value)} 
+                    value={filters.keywords} 
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                        {
+                            let eTarget = e.target as HTMLInputElement;
+                            setFilters('keywords' , eTarget.value);
+                        }
+                    } 
                     autoFocus     
                 />
 
@@ -134,7 +141,7 @@ const GraphFilterPage: FC<Props> = (props) => {
             <h1 style={{fontWeight: 'bold' , margin: '40px 0'}}> Search Results: ({searchResults.length}) </h1>    
             
             {searchResults.length !== 0 ? 
-                <ScrollContainer maxHeight={300}>
+                <ScrollContainer maxheight={300}>
                     {searchResults}
                 </ScrollContainer>
 

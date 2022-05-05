@@ -24,10 +24,22 @@ const RESIZER_STYLE = {
 };
 
 
-export default function StyledSplitPane(props) {
+type Props = {
+    children: React.ReactNode;
+    split: "vertical" | "horizontal";
+    minSize: number;
+    defaultSize: number;
+    onChange: (size: number) => void;
+    size: number;
+    pane2Style: object;
+}
+
+const StyledSplitPane = ({ children, ...props }: Props) => {
     return (
-        <SplitPane {... props} style={STYLE} resizerStyle={RESIZER_STYLE} >
-            {props.children}
+        <SplitPane {...props} style={STYLE} resizerStyle={RESIZER_STYLE} >
+            {children}
         </SplitPane>
     );
 }
+
+export default StyledSplitPane;

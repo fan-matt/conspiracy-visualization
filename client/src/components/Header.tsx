@@ -1,7 +1,4 @@
-import React from 'react';
-
 import styled from 'styled-components';
-
 
 let StyledHeader = styled.header`
     width: 100%;
@@ -14,11 +11,14 @@ let StyledHeader = styled.header`
     font-family: 'Courier New', Courier, monospace;
 `;
 
+type Props = {
+    label: string | undefined;
+};
 
-function Header(props) {
+const Header = ({ label }: Props) => {
     return(
         <StyledHeader>
-            Conspiracy Theory Network {props.date ? ' | ' + props.date : ''}
+            Conspiracy Theory Network {label ? ' | ' + label : ''}
         </StyledHeader>
     )
 }

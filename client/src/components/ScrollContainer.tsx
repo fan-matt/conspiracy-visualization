@@ -1,12 +1,12 @@
-import { FC , useState , useEffect , useRef } from 'react';
+import { useState , useEffect , useRef } from 'react';
 import styled from 'styled-components';
 import { Scrollbar } from "react-scrollbars-custom";
 
 
-const Container = styled.div <{height: number , maxHeight: number}>`
+const Container = styled.div <{height: number , maxheight: number}>`
     display: block;
     height: ${props => (props.height ? `${props.height}px` : 0)};
-    max-height: ${props => (props.maxHeight ? `${props.maxHeight}px` : 0)};
+    max-height: ${props => (props.maxheight ? `${props.maxheight}px` : 0)};
     border-radius: 5px;
     border-style: solid;
     border-color: darkgray;
@@ -15,18 +15,19 @@ const Container = styled.div <{height: number , maxHeight: number}>`
 `;
 
 
-const StyledScroll = styled(Scrollbar) <{height: number , maxHeight: number}>`
+const StyledScroll = styled(Scrollbar) <{height: number , maxheight: number}>`
     height: ${props => (props.height ? `${props.height}px` : 0)};
-    max-height: ${props => (props.maxHeight ? `${props.maxHeight}px` : 0)};
+    max-height: ${props => (props.maxheight ? `${props.maxheight}px` : 0)};
 `;
 
 
 type Props = {
-    maxHeight: number;
+    children: React.ReactNode;
+    maxheight: number;
 }
 
 
-const ScrollContainer: FC <Props> = (props) => {
+const ScrollContainer = ({ children, maxheight }: Props) => {
     const [contentHeight , setContentHeight] = useState(0);
     
     const contentRef = useRef<HTMLDivElement>(null);
@@ -38,14 +39,14 @@ const ScrollContainer: FC <Props> = (props) => {
         if(content) {
             setContentHeight(content.clientHeight);
         }
-    } , [props.children]);
+    } , [children]);
 
     // https://github.com/xobotyi/react-scrollbars-custom/issues/21#issuecomment-435786619
     return(
-        <Container height={contentHeight} maxHeight={props.maxHeight}>
-            <StyledScroll height={contentHeight} maxHeight={props.maxHeight}>
+        <Container height={contentHeight} maxheight={maxheight}>
+            <StyledScroll height={contentHeight} maxheight={maxheight}>
                 <div ref={contentRef} className='scrollable-content'>
-                    {props.children}
+                    {children}
                 </div>
             </StyledScroll>
         </Container>

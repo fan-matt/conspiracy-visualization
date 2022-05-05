@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import Header from './../components/Header';
+import Header from '../components/Header';
 
 
 let Layout = styled.div`
@@ -11,12 +11,16 @@ let Layout = styled.div`
     background-color: #3d3d3d;
 `;
 
+type Props = {
+    children: React.ReactNode;
+    label: string;
+}
 
-function MainLayout(props) {
+const MainLayout = ({ children, label }: Props) => {
     return(
         <Layout>
-            <Header date={props.date} />
-            {props.children}
+            <Header label={label} />
+            {children}
         </Layout>
     );
 }

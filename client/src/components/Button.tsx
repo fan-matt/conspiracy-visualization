@@ -23,7 +23,7 @@ const StyledButton = styled.button`
 type Props = {
     className?: string ,
     onClick?: MouseEventHandler ,
-    children: any ,
+    children: React.ReactNode ,
 };
 
 
