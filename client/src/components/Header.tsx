@@ -13,12 +13,14 @@ let StyledHeader = styled.header`
 
 type Props = {
     label: string | undefined;
+    setPopup: (hasPopup: boolean) => void
 };
 
-const Header = ({ label }: Props) => {
+const Header = ({ label, setPopup}: Props) => {
     return(
         <StyledHeader>
             Conspiracy Theory Network {label ? ' | ' + label : ''}
+            <button onClick={() => setPopup(true)}>Open Analytics</button>
         </StyledHeader>
     )
 }

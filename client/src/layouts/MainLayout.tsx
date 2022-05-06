@@ -14,12 +14,13 @@ let Layout = styled.div`
 type Props = {
     children: React.ReactNode;
     label: string;
+    setPopup: (hasPopup: boolean) => void;
 }
 
-const MainLayout = ({ children, label }: Props) => {
+const MainLayout = ({ children, label, setPopup }: Props) => {
     return(
         <Layout>
-            <Header label={label} />
+            <Header label={label} setPopup={setPopup}/>
             {children}
         </Layout>
     );
