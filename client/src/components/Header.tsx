@@ -12,6 +12,12 @@ let StyledHeader = styled.header`
     font-family: 'Courier New', Courier, monospace;
 `;
 
+const OpenAnalyticsButton = styled(Button)`
+    margin-left: 50px;
+    position: relative;
+    top: -4px;
+`;
+
 
 type Props = {
     label: string | undefined;
@@ -22,7 +28,7 @@ const Header = ({ label, setPopup}: Props) => {
     return(
         <StyledHeader>
             Conspiracy Theory Network {label ? ' | ' + label : ''}
-            <Button onClick={() => setPopup(true)}>Open Analytics</Button>
+            <OpenAnalyticsButton onClick={() => setPopup(true)}>Open Analytics</OpenAnalyticsButton>
         </StyledHeader>
     )
 }
