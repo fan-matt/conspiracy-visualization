@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import Button from './Button'
 
 
 let StyledModal = styled.div`
@@ -24,6 +25,16 @@ let StyledModalContainer = styled.div`
 let StyledHeader = styled.div`
   display: flex;
   justify-content: space-between;
+  padding: 10px;
+`
+let StyledBackdrop = styled.div`
+    position: fixed;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 100%;
+    height: 100vh;
+    top: 0;
+    left: 0;
 `
 
 type Props = {
@@ -31,17 +42,23 @@ type Props = {
 };
 
 const Popup = ({ setPopup }: Props) => {
-
   return (
-  <StyledModal>
-    <StyledModalContainer>
-      <StyledHeader>
+  <StyledBackdrop onClick={() => setPopup(false)}>
+    <StyledModal>
+      <StyledModalContainer>
+        <StyledHeader>
+          <p></p>
+          <h1 className='flex-grow: 2;'>Analytics coming soon!</h1>
+          <p></p>
+        </StyledHeader>
+        <StyledHeader>
         <p></p>
-        <h1 className='flex-grow: 2;'>Analytics coming soon!</h1>
-        <span onClick={() => setPopup(false)}>&times;</span>
-      </StyledHeader>
-    </StyledModalContainer>
-  </StyledModal>
+        <Button onClick={() => setPopup(false)}>Main Page</Button>
+        <p></p>
+        </StyledHeader>
+      </StyledModalContainer>
+    </StyledModal>
+  </StyledBackdrop>
   );
 }
 

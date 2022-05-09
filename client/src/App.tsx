@@ -7,6 +7,7 @@ import StyledSplitPane from "./components/StyledSplitPane";
 import GraphSwitchMenu from "./components/GraphSwitchMenu";
 import Footer from "./components/Footer";
 import Popup from "./components/Popup";
+import PopupBackdrop from './components/PopupBackdrop';
 
 import { formatDate } from "./util/util";
 
@@ -362,7 +363,7 @@ async function setGraph(id: number, name: string) {
 
   return (
     <div className="App">
-      { hasPopup ? <Popup setPopup={setPopup}/> : null } 
+      { hasPopup ? <Popup setPopup={setPopup}/> : null }
       <MainLayout label={graphDate} setPopup={setPopup}>
         <StyledSplitPane
           split="vertical"
