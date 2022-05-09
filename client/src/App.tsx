@@ -6,6 +6,8 @@ import GraphViewer from "./components/GraphViewer";
 import StyledSplitPane from "./components/StyledSplitPane";
 import GraphSwitchMenu from "./components/GraphSwitchMenu";
 import Footer from "./components/Footer";
+import Popup from "./components/Popup";
+import PopupBackdrop from './components/PopupBackdrop';
 
 import { formatDate } from "./util/util";
 
@@ -35,6 +37,8 @@ const App = () => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
   const [graphDate, setGraphDate] = useState<string>('');
+
+  const [hasPopup, setPopup] = useState(true);
 
   const [focusString, setFocusString] = useState("");
 
@@ -252,6 +256,10 @@ const App = () => {
     }
   }
 
+  const togglePopup = () => {
+    setPopup(!hasPopup);
+  }
+
   async function filterGraph() {
     console.log("graphFilters");
     console.log(graphFilters);
@@ -355,7 +363,8 @@ async function setGraph(id: number, name: string) {
 
   return (
     <div className="App">
-      <MainLayout label={graphDate}>
+      { hasPopup ? <Popup setPopup={setPopup}/> : null }
+      <MainLayout label={graphDate} setPopup={setPopup}>
         <StyledSplitPane
           split="vertical"
           minSize={200}

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import Button from './Button'
 
 let StyledHeader = styled.header`
     width: 100%;
@@ -11,14 +12,23 @@ let StyledHeader = styled.header`
     font-family: 'Courier New', Courier, monospace;
 `;
 
+const OpenAnalyticsButton = styled(Button)`
+    margin-left: 50px;
+    position: relative;
+    top: -4px;
+`;
+
+
 type Props = {
     label: string | undefined;
+    setPopup: (hasPopup: boolean) => void
 };
 
-const Header = ({ label }: Props) => {
+const Header = ({ label, setPopup}: Props) => {
     return(
         <StyledHeader>
             Conspiracy Theory Network {label ? ' | ' + label : ''}
+            <OpenAnalyticsButton onClick={() => setPopup(true)}>Open Analytics</OpenAnalyticsButton>
         </StyledHeader>
     )
 }
