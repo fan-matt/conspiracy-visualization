@@ -9,6 +9,8 @@ import {
   GRAPH_BACKGROUND_COLOR,
 } from "../util/DataConsts";
 
+import { nodeColorFromNER } from './../util/util';
+
 
 type Props = {
   currentNode: Node | undefined;
@@ -194,6 +196,14 @@ const GraphViewer = ({ currentNode, data, onNodeClick, focusString, width, heigh
   function paintNode(node: Node, color: string | undefined, ctx: CanvasRenderingContext2D) {
     const NODE_SIZE = handleNodeSize(node);
 
+    const metaData = JSON.parse(node.meta);
+    const NERLabel = metaData.color;
+
+    let nodeFillColor;
+
+    // Map colors
+    nodeFillColor = nodeColorFromNER(NERLabel);
+
     if(node.x && node.y) {
       ctx.beginPath();
       ctx.arc(node.x, node.y, NODE_SIZE * 1.1, 0, 2 * Math.PI, false);
@@ -229,8 +239,7 @@ const GraphViewer = ({ currentNode, data, onNodeClick, focusString, width, heigh
       if(existsIn) {
         ctx.fillStyle = color ? color : "#ffd700";
       } else {
-        // forgive me
-        ctx.fillStyle = color ? color : (node.__indexColor ? node.__indexColor : "black");
+        ctx.fillStyle = color ? color : nodeFillColor;
       }
 
       ctx.fill();

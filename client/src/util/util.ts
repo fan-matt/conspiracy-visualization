@@ -64,3 +64,38 @@ export function formatDate(dateTime: string): string {
 
     return monthString + ' ' + day + ', ' + year;
 }
+
+export function nodeColorFromNER(label: string | undefined) {
+    let nodeFillColor: string;
+
+    switch(label) {
+        case 'PERSON': 
+            nodeFillColor = '#fc00cd';
+            break;
+        
+        case 'ORG':
+            nodeFillColor = '#3800ca';
+            break;
+        
+        case 'NORP':
+            nodeFillColor = '#50017c';
+            break;
+        
+        case 'GPE':
+            nodeFillColor = '#f8025a';
+            break;
+        
+        case 'EVENT':
+            nodeFillColor = '#28003e';
+            break;
+
+        case 'LOC':
+            nodeFillColor = '#580122';
+            break;
+        
+        default:
+            nodeFillColor = '#000000';
+    }
+
+    return nodeFillColor;
+}

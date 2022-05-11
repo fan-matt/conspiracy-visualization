@@ -7,7 +7,6 @@ import StyledSplitPane from "./components/StyledSplitPane";
 import GraphSwitchMenu from "./components/GraphSwitchMenu";
 import Footer from "./components/Footer";
 import Popup from "./components/Popup";
-import PopupBackdrop from './components/PopupBackdrop';
 
 import { formatDate } from "./util/util";
 
@@ -241,6 +240,7 @@ const App = () => {
 
   function onNodeClick(node: Node | undefined) {
     setCurrentNode(node);
+    setCurrentPageIndex(1);
   }
 
   function onPageChange(newIndex: number) {
@@ -254,10 +254,6 @@ const App = () => {
       filterCopy[field] = value;
       setGraphFilters(filterCopy);
     }
-  }
-
-  const togglePopup = () => {
-    setPopup(!hasPopup);
   }
 
   async function filterGraph() {
