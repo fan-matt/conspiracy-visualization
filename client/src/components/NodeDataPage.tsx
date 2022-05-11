@@ -10,16 +10,17 @@ import Input from "./Input";
 import Button from "./Button";
 
 import SwitchMenuPage from "./SwitchMenuPage";
+import { nodeColorFromNER } from './../util/util';
 import { Node, Link, NeighborhoodSearchSettings } from "../types";
 
-// const IndicatorDot = styled.div<{ size: number }>`
-//   height: ${(props) => props.size};
-//   width: ${(props) => props.size};
-//   border-radius: ${(props) => "calc(" + props.size + " / 2)"};
-//   background-color: ${(props) => props.color};
-//   display: inline-block;
-//   margin-left: 20px;
-// `;
+const IndicatorDot = styled.div<{ size: string, color: string }>`
+  height: ${(props) => props.size};
+  width: ${(props) => props.size};
+  border-radius: ${(props) => "calc(" + props.size + " / 2)"};
+  background-color: ${(props) => props.color};
+  display: inline-block;
+  margin-left: 20px;
+`;
 
 const StyledPage = styled.div`
   line-height: 18px;
@@ -196,7 +197,10 @@ const NodeDataPage = ({ node, updateNode, getCommunityMembers, updateSubgraph, v
         <h3> {metaData?.weight} </h3>
 
         <h2 style={{ marginTop: "20px" }}> Type: </h2>
-        <h3> {metaData?.color} </h3>
+        <h3 style={{display: 'flex' , alignItems: 'center'}}> 
+          {metaData?.color} 
+          <IndicatorDot color={nodeColorFromNER(metaData?.color)} size='20px' /> 
+        </h3>
 
         {/* <h2> Community: </h2>
                 <h3 style={{display: 'flex' , alignItems: 'center'}}> 
