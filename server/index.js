@@ -60,6 +60,67 @@ function InvOrMissingParams(response) {
 	return;
 }
 
+app.post("/api/getTimeSeries", async (req, res) => {
+  /* 
+   * Given timespan and keyword, get timeseries of word frequencies
+   *
+   * input: 
+   * {
+   *  keyword: string
+   *  startdate: date  
+   *  enddate: date
+   * }
+   * 
+   * output:
+   *  frequencies: [int]
+   *
+  */
+
+  //check for presence of required params
+  console.log(req.body.input);
+  if (
+    req.body.input == undefined ||
+    req.body.input.keyword == undefined ||
+    req.body.input.startdate == undefined ||
+    req.body.input.enddate == undefined
+  ) {
+    InvOrMissingParams(res);
+    
+    return;
+  }
+
+  //check for correct types
+	let start_date = new Date(req.body.input.startdate);
+  let end_date = new Date(req.body.input.enddate);
+  let keyword = req.body.input.keyword;
+	if (
+		typeof req.body.input.keyword != "string" ||
+		start_date == "Invalid Date" ||
+    end_date == "Invalid Date"
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
+  
+  const connection = await ASYNC_pool.awaitGetConnection();
+  connection.on("error", (err)=>{
+    defError(res,errP);
+    return;
+  });
+  let json_object = [];
+  json_object["frequencies"] = [];
+  let currDate = start_date;
+
+  while (currDate <= end_date) {  // iterate through all days in range (bad??)
+    let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
+    let result = await connection.awaitQuery(query);
+    json_object["frequencies"].push([new Date(currDate), result[0]['COUNT(*)']]);
+    currDate.setDate(currDate.getDate() + 1);
+  }
+  res.json(json_object);
+
+})
+
 app.post("/api/graphDates", (req, res) => {
 	/*
 	 * Get every possible graph date, return array
