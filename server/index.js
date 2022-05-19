@@ -114,7 +114,7 @@ app.post("/api/getTimeSeries", async (req, res) => {
   while (currDate <= end_date) {  // iterate through all days in range (bad??)
     let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
     let result = await connection.awaitQuery(query);
-    json_object["frequencies"].push([new Date(currDate), result[0]['COUNT(*)']]);
+    json_object.push([new Date(currDate), result[0]['COUNT(*)']]);
     currDate.setDate(currDate.getDate() + 1);
   }
   res.json(json_object);
