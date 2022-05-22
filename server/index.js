@@ -16,7 +16,7 @@ const uploadFolder = path.join(__dirname, "uploaded");
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "elee",
+	user: "root",
 	password: "password",
 
 	database: "MAINDB",
@@ -29,7 +29,7 @@ const ASYNC_mysql = require("mysql-await");
 const ASYNC_pool = ASYNC_mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "elee",
+	user: "root",
 	password: "password",
 
 	database: "MAINDB",
@@ -101,21 +101,23 @@ app.post("/api/getTimeSeries", async (req, res) => {
 		InvOrMissingParams(res);
 		return;
 	}
-  
+  console.log("Establishing connection");
   const connection = await ASYNC_pool.awaitGetConnection();
   connection.on("error", (err)=>{
+    console.log("Connection error!");
     defError(res,errP);
     return;
   });
+  console.log("No connection error!");
   let json_object = [];
-  json_object["frequencies"] = [];
   let currDate = start_date;
 
   while (currDate <= end_date) {  // iterate through all days in range (bad??)
     let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
     let result = await connection.awaitQuery(query);
-    json_object["frequencies"].push([new Date(currDate), result[0]['COUNT(*)']]);
+    json_object.push({date: new Date(currDate), frequency: result[0]['COUNT(*)']});
     currDate.setDate(currDate.getDate() + 1);
+    console.log("here");
   }
   res.json(json_object);
 
