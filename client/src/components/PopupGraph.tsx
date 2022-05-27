@@ -1,62 +1,100 @@
 import { useEffect, useState } from "react";
-//import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
-let test = {keyword: "trump", startdate: "2021-01-18", enddate: "2021-02-20"};
-const graphTerms: string[] = ["parler", "trump", "jfk", "moon landing", "russia"];
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+//let test = {keyword: "trump", startdate: "2021-01-18", enddate: "2021-02-20"};
+
+const graphOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+    title: {
+      display: true,
+      text: 'Frequency of Terms (past 30 days)',
+    },
+  },
+};
 
 
-type dateFreq = [date: Date, num: number];
+type dateFreq = [date: Date, freq: number];
 
 
 type Props = {
   terms: string[];
 };
 
+
 const PopupGraph = ({ terms }: Props) =>{
-  const [ graphData , setGraphData] = useState<Array<dateFreq>>([]);
-  //const [ searchTerm, setSearchTerm] = useState("trump");
+  const [ graphData , setGraphData] = useState<any>([]);
+  // Function for getting a string in YYYY-MM-DD format
+  function dateToString(date: Date){
+    let mm = date.getMonth()+1;
+    let dd = date.getDate();
+    let dateString: string = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
+    return dateString;
+  }
   // Getting the start and end date in string form
-  
-  function fetchTimeSeries() {
-    let currInput = {keyword: "trump", startdate: "2021-01-18", enddate: "2021-02-20"};
-    fetch("./api/getTimeSeries", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ input: currInput }),
-    })
-    .then((response) => response.json())
-    .then((response) => {console.log(response); setGraphData(response); console.log(graphData)});
+  let currDate: Date = new Date("2022-02-20");
+  let endDate: string = dateToString(currDate);
+  let lastDate: Date = currDate;
+  lastDate.setDate(currDate.getDate()+30);
+  let startDate: string = dateToString(lastDate);
+  let dates: string[] = [];
+  // Makes an array of dates for labels on the graph
+  while (lastDate <= currDate){
+    dates.push(dateToString(lastDate));
+    lastDate.setDate(lastDate.getDate()+1);
+  }
+  // Function for getting each of the terms data over the time period
+  function fetchTimeSeries(keywords: string[]) {
+    keywords.forEach((term: string) => {
+      let termInput = {keyword: term, startdate: startDate, enddate: endDate};
+      console.log(`Input: ${JSON.stringify(termInput)}`);
+      fetch("./api/getTimeSeries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: termInput }),
+      })
+      .then((response) => response.json())
+      .then((response) => {
+        setGraphData(response);
+        console.log(response);
+        console.log(`Got ${term}`);
+      });
+    });
   }
 
   useEffect(() => {
-    //let currDate: Date = new Date("2021-02-20");
-    //let endDate: string = dateToString(currDate);
-    //currDate.setDate(currDate.getDate()-30);
-    //let startDate: string = dateToString(currDate);
-    
     console.log("fetching timeseries data...");
-    
-    
-    fetchTimeSeries();
+    fetchTimeSeries(terms);
   }, []);
-
-  //Function for getting a string in YYYY-MM-DD format
-  const dateToString = graphData.map((dateFreq) => {
-    let thisDate = new Date(dateFreq[0]);
-    let mm = thisDate.getMonth()+1;
-    let dd = thisDate.getDate();
-    let dates = [thisDate.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-");
-
-    return(
-      <p>{dates} {dateFreq[1]}</p>
-    );
-  })
 
 
   return(
-    <div>{dateToString}</div>
+    <p>{JSON.stringify(graphData)}</p>
   );
 }
 
