@@ -54,20 +54,10 @@ const PopupGraph = ({ terms }: Props) =>{
     let dateString: string = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
     return dateString;
   }
-  // Getting the start and end date in string form
-  let currDate: Date = new Date("2022-02-20");
-  let endDate: string = dateToString(currDate);
-  let lastDate: Date = currDate;
-  lastDate.setDate(currDate.getDate()+30);
-  let startDate: string = dateToString(lastDate);
-  let dates: string[] = [];
-  // Makes an array of dates for labels on the graph
-  while (lastDate <= currDate){
-    dates.push(dateToString(lastDate));
-    lastDate.setDate(lastDate.getDate()+1);
-  }
+  
+  
   // Function for getting each of the terms data over the time period
-  function fetchTimeSeries(keywords: string[]) {
+  function fetchTimeSeries(keywords: string[], startDate: string, endDate: string) {
     keywords.forEach((term: string) => {
       let termInput = {keyword: term, startdate: startDate, enddate: endDate};
       console.log(`Input: ${JSON.stringify(termInput)}`);
@@ -89,7 +79,20 @@ const PopupGraph = ({ terms }: Props) =>{
 
   useEffect(() => {
     console.log("fetching timeseries data...");
-    fetchTimeSeries(terms);
+    // Getting the start and end date in string form
+    let currDate: Date = new Date("2022-02-20");
+    let startDate: string = dateToString(currDate);
+    let lastDate: Date = new Date(currDate.valueOf());
+    lastDate.setDate(currDate.getDate() + 30);
+    let endDate: string = dateToString(lastDate);
+    let dates: string[] = [];
+    // Makes an array of dates for labels on the graph
+    while (lastDate <= currDate){
+      dates.push(dateToString(lastDate));
+      lastDate.setDate(lastDate.getDate()+1);
+    }
+    
+    fetchTimeSeries(terms, startDate, endDate);
   }, []);
 
 
