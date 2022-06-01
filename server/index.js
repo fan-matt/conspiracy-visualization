@@ -60,6 +60,72 @@ function InvOrMissingParams(response) {
 	return;
 }
 
+app.post("/api/getPastDaysTimeSeries", async (req, res) => {
+  /* 
+   * Given startDate and keyword, get timeseries of word frequencies for numDays after startDate
+   *
+   * input: 
+   * {
+   *  keywords: array of strings
+   *  startDate: date  
+   *  numDays: number of days back
+   * }
+   * 
+   * output:
+   *  frequencies: [int]
+   *
+  */
+
+  //check for presence of required params
+  console.log(req.body.input);
+  if (
+    req.body.input == undefined ||
+    req.body.input.keywords == undefined ||
+    req.body.input.startDate == undefined||
+    req.body.input.numDays == undefined
+  ) {
+    InvOrMissingParams(res);
+    
+    return;
+  }
+
+  //check for correct types
+	let startDate = new Date(req.body.input.startdate);
+  let numDays = req.body.input.numDays;
+  let keywords = req.body.input.keywords;
+	if (
+	  startDate == "Invalid Date" ||
+    !Number.isInteger(numDays)
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
+  console.log("Establishing connection");
+  const connection = await ASYNC_pool.awaitGetConnection();
+  connection.on("error", (err)=>{
+    console.log("Connection error!");
+    defError(res,errP);
+    return;
+  });
+  console.log("No connection error!");
+  let json_object = {labels: [], datasets: []};
+  // Making datasets for all 
+  json_object.datasets = keywords.map(keyword =>{
+    return {label: keyword, data: []}
+  })
+  for (let currDate = startDate; currDate <= (startDate.getDate() + 30); currDate.setDate(currDate.getDate() + 1)){
+    json_object.labels.push(helper.formattedDateString(currDate));
+    // Iterates through all the keywords
+    for(let index = 0; index < keywords.length; index++){
+      let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
+      let result = await connection.awaitQuery(query);
+      json_object.datasets[index].data.push(result[0]['COUNT(*)']);
+    }
+  }
+  res.json(json_object);
+
+})
+
 app.post("/api/getTimeSeries", async (req, res) => {
   /* 
    * Given timespan and keyword, get timeseries of word frequencies
