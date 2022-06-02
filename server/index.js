@@ -90,7 +90,8 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   }
 
   //check for correct types
-	let startDate = new Date(req.body.input.startdate);
+	let startDate = new Date(req.body.input.startDate);
+  let currDate = startDate;
   let numDays = req.body.input.numDays;
   let keywords = req.body.input.keywords;
 	if (
@@ -113,11 +114,21 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   json_object.datasets = keywords.map(keyword =>{
     return {label: keyword, data: []}
   })
-  for (let currDate = startDate; currDate <= (startDate.getDate() + 30); currDate.setDate(currDate.getDate() + 1)){
-    json_object.labels.push(helper.formattedDateString(currDate));
+
+  // Function for getting a string in YYYY-MM-DD format
+  function dateToString(date){
+    let mm = date.getMonth()+1;
+    let dd = date.getDate();
+    let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
+    return dateString;
+  }
+  for (let iteration = 0; iteration < numDays; iteration++){
+    currDate.setDate(currDate.getDate() + 1);
+    json_object.labels.push(dateToString(currDate));
+    console.log(`Currently on date ${helper.formattedDateString(currDate)}`);
     // Iterates through all the keywords
     for(let index = 0; index < keywords.length; index++){
-      let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
+      let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keywords[index]+"%'";
       let result = await connection.awaitQuery(query);
       json_object.datasets[index].data.push(result[0]['COUNT(*)']);
     }
