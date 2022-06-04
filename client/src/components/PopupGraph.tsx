@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
@@ -10,6 +11,10 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+
+let StyledDiv =  styled.div`
+  height: 100%;
+`
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +33,7 @@ let testData = {"labels":["2022-02-19","2022-02-20","2022-02-21","2022-02-22","2
 
 const graphOptions = {
   responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top' as const,
@@ -81,7 +87,9 @@ const PopupGraph = ({ terms }: Props) =>{
   useEffect(() => {
     console.log("fetching timeseries data...");
     // Getting the start and end date in string form
-    let currDate: Date = new Date("2022-03-20");
+    let currDate: Date = new Date();
+    currDate.setDate(currDate.getDate()-30);
+    console.log(currDate);
     let startDate: string = dateToString(currDate);
     
     fetchTimeSeries(terms, startDate, 30);
@@ -89,9 +97,9 @@ const PopupGraph = ({ terms }: Props) =>{
 
 
   return(
-    <div>
+    <StyledDiv>
       <Line options={graphOptions} data={graphData} />
-    </div>
+    </StyledDiv>
 //    <p>{JSON.stringify(graphData)}</p>
     
 //    <Line options={graphOptions} data={testData} />
