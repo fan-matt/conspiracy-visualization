@@ -93,6 +93,8 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
 	let startDate = new Date(req.body.input.startDate);
   let currDate = startDate;
   let numDays = req.body.input.numDays;
+  let endDate = new Date(startDate.valueOf());
+  endDate.setDate(startDate.getDate() + numDays);
   let keywords = req.body.input.keywords;
 	if (
 	  startDate == "Invalid Date" ||
@@ -122,6 +124,23 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
     let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
     return dateString;
   }
+  /*
+  for (let iteration = 0; iteration < numDays; iteration++){  // fill dates entry first
+    currDate.setDate(currDate.getDate() + 1);
+    json_object.labels.push(dateToString(currDate));
+  }
+  for(let index = 0; index < keywords.length; index++){  // then fill counts 
+    let query = "SELECT COUNT(*) FROM nodes WHERE node LIKE '%" + 
+              keyword +
+              "%' AND Date >= '" + helper.formattedDateString(start_date) + 
+              "' AND Date <= '"+helper.formattedDateString(end_date) + 
+              "' GROUP BY Date";
+    let result = await connection.awaitQuery(query);
+    console.log(result);
+    json_object.datasets[index].data = result.map((entry) => entry[0]['COUNT(*)']);
+  }
+  */
+  
   for (let iteration = 0; iteration < numDays; iteration++){
     currDate.setDate(currDate.getDate() + 1);
     json_object.labels.push(dateToString(currDate));
@@ -186,16 +205,20 @@ app.post("/api/getTimeSeries", async (req, res) => {
     return;
   });
   console.log("No connection error!");
-  let json_object = [];
-  let currDate = start_date;
+  
+  let query = "SELECT Date, COUNT(*) FROM nodes WHERE node LIKE '%" + 
+              keyword +
+              "%' AND Date > '" + helper.formattedDateString(start_date) + 
+              "' AND Date < '"+helper.formattedDateString(end_date) + 
+              "' GROUP BY Date";
+  let result = await connection.awaitQuery(query);
+  //json_object.push([new Date(currDate), result[0]['COUNT(*)']]);
+  console.log(result);
+  const json_object = result.map((entry) => 
+    [entry["Date"], entry["COUNT(*)"]]
+  )
 
-  while (currDate <= end_date) {  // iterate through all days in range (bad??)
-    let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keyword+"%'";
-    let result = await connection.awaitQuery(query);
-    json_object.push([new Date(currDate), result[0]['COUNT(*)']]);
-    currDate.setDate(currDate.getDate() + 1);
-    console.log("here");
-  }
+  console.log(json_object);
   res.json(json_object);
 
 })
