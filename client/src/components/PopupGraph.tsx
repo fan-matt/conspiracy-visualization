@@ -22,6 +22,9 @@ ChartJS.register(
 );
 
 //let test = {keyword: "trump", startdate: "2021-01-18", enddate: "2021-02-20"};
+let testData = {"labels":["2022-02-19","2022-02-20","2022-02-21","2022-02-22","2022-02-23","2022-02-24","2022-02-25","2022-02-26","2022-02-27","2022-02-28","2022-03-01","2022-03-02","2022-03-03","2022-03-04","2022-03-05","2022-03-06","2022-03-07","2022-03-08","2022-03-09","2022-03-10","2022-03-11","2022-03-12","2022-03-13","2022-03-14","2022-03-15","2022-03-16","2022-03-17","2022-03-18","2022-03-19","2022-03-20"],"datasets":[{"label":"parler","data":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"label":"trump","data":[2,1,8,0,4,8,6,11,11,1,1,5,4,9,0,7,6,8,13,8,0,5,5,8,6,0,5,0,5,5]},{"label":"jfk","data":[0,0,0,0,1,0,1,1,1,0,0,1,1,0,0,0,1,2,0,0,0,1,1,0,1,0,0,0,0,0]},{"label":"moon landing","data":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},{"label":"russia","data":[3,0,6,0,13,20,19,19,25,4,11,26,42,42,0,9,16,30,29,36,0,43,43,48,21,0,15,0,23,20]}]}
+
+
 
 const graphOptions = {
   responsive: true,
@@ -57,7 +60,7 @@ const PopupGraph = ({ terms }: Props) =>{
   
   
   // Function for getting each of the terms data over the time period
-  function fetchTimeSeries(keywords: string[], startDate: string, numDays: number) {
+  async function fetchTimeSeries(keywords: string[], startDate: string, numDays: number) {
     let termInput = {keywords: keywords, startDate: startDate, numDays: numDays};
     console.log(`Input: ${JSON.stringify(termInput)}`);
     fetch("./api/getPastDaysTimeSeries", {
@@ -86,8 +89,11 @@ const PopupGraph = ({ terms }: Props) =>{
 
 
   return(
-    <p>{JSON.stringify(graphData)}</p>
+//    <p>{JSON.stringify(graphData)}</p>
+    <Line options={graphOptions} data={graphData} />
+//    <Line options={graphOptions} data={testData} />
   );
 }
+
 
 export default PopupGraph;
