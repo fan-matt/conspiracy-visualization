@@ -49,7 +49,7 @@ type Props = {
 
 
 const PopupGraph = ({ terms }: Props) =>{
-  const [ graphData , setGraphData] = useState<any>([]);
+  const [ graphData , setGraphData] = useState<any>(testData);
   // Function for getting a string in YYYY-MM-DD format
   function dateToString(date: Date){
     let mm = date.getMonth()+1;
@@ -60,7 +60,7 @@ const PopupGraph = ({ terms }: Props) =>{
   
   
   // Function for getting each of the terms data over the time period
-  async function fetchTimeSeries(keywords: string[], startDate: string, numDays: number) {
+  function fetchTimeSeries(keywords: string[], startDate: string, numDays: number) {
     let termInput = {keywords: keywords, startDate: startDate, numDays: numDays};
     console.log(`Input: ${JSON.stringify(termInput)}`);
     fetch("./api/getPastDaysTimeSeries", {
@@ -81,16 +81,19 @@ const PopupGraph = ({ terms }: Props) =>{
   useEffect(() => {
     console.log("fetching timeseries data...");
     // Getting the start and end date in string form
-    let currDate: Date = new Date("2022-02-20");
+    let currDate: Date = new Date("2022-03-20");
     let startDate: string = dateToString(currDate);
     
     fetchTimeSeries(terms, startDate, 30);
-  }, []);
+  }, [terms]);
 
 
   return(
+    <div>
+      <Line options={graphOptions} data={graphData} />
+    </div>
 //    <p>{JSON.stringify(graphData)}</p>
-    <Line options={graphOptions} data={graphData} />
+    
 //    <Line options={graphOptions} data={testData} />
   );
 }
