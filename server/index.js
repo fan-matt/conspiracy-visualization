@@ -16,7 +16,7 @@ const uploadFolder = path.join(__dirname, "uploaded");
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "root",
+	user: "elee",
 	password: "password",
 
 	database: "MAINDB",
@@ -29,7 +29,7 @@ const ASYNC_mysql = require("mysql-await");
 const ASYNC_pool = ASYNC_mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "root",
+	user: "elee",
 	password: "password",
 
 	database: "MAINDB",
