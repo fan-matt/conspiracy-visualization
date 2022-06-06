@@ -16,7 +16,7 @@ const uploadFolder = path.join(__dirname, "uploaded");
 const pool = mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "elee",
+	user: "root",
 	password: "password",
 
 	database: "MAINDB",
@@ -29,7 +29,7 @@ const ASYNC_mysql = require("mysql-await");
 const ASYNC_pool = ASYNC_mysql.createPool({
 	connectionLimit: 10,
 	host: "127.0.0.1",
-	user: "elee",
+	user: "root",
 	password: "password",
 
 	database: "MAINDB",
@@ -59,6 +59,170 @@ function InvOrMissingParams(response) {
 	response.json({ Error: "Missing or Invalid Parameters" });
 	return;
 }
+
+app.post("/api/getPastDaysTimeSeries", async (req, res) => {
+  /* 
+   * Given startDate and keyword, get timeseries of word frequencies for numDays after startDate
+   *
+   * input: 
+   * {
+   *  keywords: array of strings
+   *  startDate: date  
+   *  numDays: number of days back
+   * }
+   * 
+   * output:
+   *  frequencies: [int]
+   *
+  */
+
+  //check for presence of required params
+  console.log(req.body.input);
+  if (
+    req.body.input == undefined ||
+    req.body.input.keywords == undefined ||
+    req.body.input.startDate == undefined||
+    req.body.input.numDays == undefined
+  ) {
+    InvOrMissingParams(res);
+    
+    return;
+  }
+
+  //check for correct types
+	let startDate = new Date(req.body.input.startDate);
+  let currDate = startDate;
+  let numDays = req.body.input.numDays;
+  let endDate = new Date(startDate.valueOf());
+  endDate.setDate(startDate.getDate() + numDays);
+  let keywords = req.body.input.keywords;
+	if (
+	  startDate == "Invalid Date" ||
+    !Number.isInteger(numDays)
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
+  console.log("Establishing connection");
+  const connection = await ASYNC_pool.awaitGetConnection();
+  connection.on("error", (err)=>{
+    console.log("Connection error!");
+    defError(res,errP);
+    return;
+  });
+  console.log("No connection error!");
+  let json_object = {labels: [], datasets: []};
+  // Making datasets for all 
+  json_object.datasets = keywords.map(keyword =>{
+    return {label: keyword, data: [], borderColor: "red", fill: false}
+  })
+
+  // Function for getting a string in YYYY-MM-DD format
+  function dateToString(date){
+    let mm = date.getMonth()+1;
+    let dd = date.getDate();
+    let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
+    return dateString;
+  }
+  /*
+  for (let iteration = 0; iteration < numDays; iteration++){  // fill dates entry first
+    currDate.setDate(currDate.getDate() + 1);
+    json_object.labels.push(dateToString(currDate));
+  }
+  for(let index = 0; index < keywords.length; index++){  // then fill counts 
+    let query = "SELECT COUNT(*) FROM nodes WHERE node LIKE '%" + 
+              keyword +
+              "%' AND Date >= '" + helper.formattedDateString(start_date) + 
+              "' AND Date <= '"+helper.formattedDateString(end_date) + 
+              "' GROUP BY Date";
+    let result = await connection.awaitQuery(query);
+    console.log(result);
+    json_object.datasets[index].data = result.map((entry) => entry[0]['COUNT(*)']);
+  }
+  */
+  let colors = ["#ff6e54", "#58508d", "#bc5090", "#ff6361e", "#ffa600", "#dd5182"];
+  for (let iteration = 0; iteration < numDays; iteration++){
+    currDate.setDate(currDate.getDate() + 1);
+    json_object.labels.push(dateToString(currDate));
+    console.log(`Currently on date ${helper.formattedDateString(currDate)}`);
+    // Iterates through all the keywords
+    for(let index = 0; index < keywords.length; index++){
+      let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keywords[index]+"%'";
+      let result = await connection.awaitQuery(query);
+      json_object.datasets[index].data.push(result[0]['COUNT(*)']);
+      json_object.datasets[index].borderColor = colors[index % colors.length]
+    }
+  }
+  res.json(json_object);
+
+})
+
+app.post("/api/getTimeSeries", async (req, res) => {
+  /* 
+   * Given timespan and keyword, get timeseries of word frequencies
+   *
+   * input: 
+   * {
+   *  keyword: string
+   *  startdate: date  
+   *  enddate: date
+   * }
+   * 
+   * output:
+   *  frequencies: [int]
+   *
+  */
+
+  //check for presence of required params
+  console.log(req.body.input);
+  if (
+    req.body.input == undefined ||
+    req.body.input.keyword == undefined ||
+    req.body.input.startdate == undefined ||
+    req.body.input.enddate == undefined
+  ) {
+    InvOrMissingParams(res);
+    
+    return;
+  }
+
+  //check for correct types
+	let start_date = new Date(req.body.input.startdate);
+  let end_date = new Date(req.body.input.enddate);
+  let keyword = req.body.input.keyword;
+	if (
+		typeof req.body.input.keyword != "string" ||
+		start_date == "Invalid Date" ||
+    end_date == "Invalid Date"
+	) {
+		InvOrMissingParams(res);
+		return;
+	}
+  console.log("Establishing connection");
+  const connection = await ASYNC_pool.awaitGetConnection();
+  connection.on("error", (err)=>{
+    console.log("Connection error!");
+    defError(res,errP);
+    return;
+  });
+  console.log("No connection error!");
+  
+  let query = "SELECT Date, COUNT(*) FROM nodes WHERE node LIKE '%" + 
+              keyword +
+              "%' AND Date > '" + helper.formattedDateString(start_date) + 
+              "' AND Date < '"+helper.formattedDateString(end_date) + 
+              "' GROUP BY Date";
+  let result = await connection.awaitQuery(query);
+  //json_object.push([new Date(currDate), result[0]['COUNT(*)']]);
+  console.log(result);
+  const json_object = result.map((entry) => 
+    [entry["Date"], entry["COUNT(*)"]]
+  )
+
+  console.log(json_object);
+  res.json(json_object);
+
+})
 
 app.post("/api/graphDates", (req, res) => {
 	/*
