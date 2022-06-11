@@ -3,14 +3,14 @@ import Button from './Button';
 import PopupGraph from './PopupGraph';
 
 let StyledModal = styled.div`
-  position: absolute; 
-  z-index: 10; /* Sit on top */
+  position: fixed; 
+  z-index: 5; /* Sit on top */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
 `;
 
 let StyledModalContainer = styled.div`
@@ -25,12 +25,12 @@ let StyledModalContainer = styled.div`
   height: 60%;
   font-family: 'Courier New', Courier, monospace;
   color: #f7f7f7;
-`
+`;
 let StyledHeader = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 10px;
-`
+`;
 let StyledBackdrop = styled.div`
   position: fixed;
   z-index: 1;
@@ -39,24 +39,8 @@ let StyledBackdrop = styled.div`
   height: 100vh;
   top: 0;
   left: 0;
-`
+`;
 
-/*
-let test = {keyword: "trump", startdate: "2021-01-18", enddate: "2021-02-20"};
-
-const getfreq = async () => {
-  fetch("./api/getTimeSeries", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ input: test }),
-  })
-  .then((response) => response.json())
-  .then((response) => console.log(response));
-}
-getfreq();
-*/
 
 const graphTerms: string[] = ["parler", "trump", "jfk", "moon landing", "russia"];
 
@@ -66,7 +50,6 @@ type Props = {
 
 const Popup = ({ setPopup }: Props) => {
   return (
-  <StyledBackdrop onClick={() => setPopup(false)}>
     <StyledModal>
       <StyledModalContainer>
         <StyledHeader>
@@ -82,7 +65,6 @@ const Popup = ({ setPopup }: Props) => {
         </StyledHeader>
       </StyledModalContainer>
     </StyledModal>
-  </StyledBackdrop>
   );
 }
 

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import Button from './Button';
 import { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
@@ -13,7 +14,7 @@ import {
 import { Line } from 'react-chartjs-2';
 
 let StyledDiv =  styled.div`
-  height: 100%;
+  height: 70%;
 `
 
 ChartJS.register(
@@ -31,7 +32,7 @@ let testData = {"labels":["2022-02-19","2022-02-20","2022-02-21","2022-02-22","2
 
 
 
-const graphOptions = {
+let graphOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -40,9 +41,23 @@ const graphOptions = {
     },
     title: {
       display: true,
-      text: 'Frequency of Terms (past 30 days)',
+      text: 'Frequency of Terms (past '+30+' days)',
+      color: 'white',
     },
   },
+  scales: {
+    yAxes: {
+      ticks: {
+        color: 'white',
+      },
+    },
+    xAxes: {
+      ticks: {
+        color: 'white',
+      },
+    },
+  },
+  color: "white",
 };
 
 
@@ -56,6 +71,7 @@ type Props = {
 
 const PopupGraph = ({ terms }: Props) =>{
   const [ graphData , setGraphData] = useState<any>(testData);
+  const [ dateRange, setDateRange ] = useState(30);
   // Function for getting a string in YYYY-MM-DD format
   function dateToString(date: Date){
     let mm = date.getMonth()+1;
@@ -88,21 +104,20 @@ const PopupGraph = ({ terms }: Props) =>{
     console.log("fetching timeseries data...");
     // Getting the start and end date in string form
     let currDate: Date = new Date();
-    currDate.setDate(currDate.getDate()-30);
+    currDate.setDate(currDate.getDate() - dateRange);
     console.log(currDate);
     let startDate: string = dateToString(currDate);
-    
-    fetchTimeSeries(terms, startDate, 30);
-  }, [terms]);
+    graphOptions.plugins.title.text = 'Frequency of Terms (past '+dateRange+' days)';
+    fetchTimeSeries(terms, startDate, dateRange);
+  }, [terms, dateRange]);
 
 
   return(
     <StyledDiv>
+      <Button onClick={() => setDateRange(30)}>30 days</Button>
+      <Button onClick={() => setDateRange(180)}>6 months</Button>
       <Line options={graphOptions} data={graphData} />
     </StyledDiv>
-//    <p>{JSON.stringify(graphData)}</p>
-    
-//    <Line options={graphOptions} data={testData} />
   );
 }
 

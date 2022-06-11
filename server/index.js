@@ -144,7 +144,6 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   for (let iteration = 0; iteration < numDays; iteration++){
     currDate.setDate(currDate.getDate() + 1);
     json_object.labels.push(dateToString(currDate));
-    console.log(`Currently on date ${helper.formattedDateString(currDate)}`);
     // Iterates through all the keywords
     for(let index = 0; index < keywords.length; index++){
       let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keywords[index]+"%'";
