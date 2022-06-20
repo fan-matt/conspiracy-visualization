@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import Button from './Button';
 import PopupGraph from './PopupGraph';
+import PopupPieChart from './PopupPieChart';
 
 let StyledModal = styled.div`
   position: fixed; 
@@ -16,13 +17,14 @@ let StyledModal = styled.div`
 let StyledModalContainer = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 10px;
   justify-content: space-between;
   background-color: #283d5e;
-  margin: 10% auto; /* 15% from the top and centered */
+  margin: 5% auto; /* 15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
   width: 80%; /* Could be more or less, depending on screen size */
-  height: 60%;
+  height: 80%;
   font-family: 'Courier New', Courier, monospace;
   color: #f7f7f7;
 `;
@@ -30,15 +32,6 @@ let StyledHeader = styled.div`
   display: flex;
   justify-content: space-between;
   padding: 10px;
-`;
-let StyledBackdrop = styled.div`
-  position: fixed;
-  z-index: 1;
-  background-color: rgba(0, 0, 0, 0.6);
-  width: 100%;
-  height: 100vh;
-  top: 0;
-  left: 0;
 `;
 
 
@@ -58,6 +51,7 @@ const Popup = ({ setPopup }: Props) => {
           <p></p>
         </StyledHeader>
         <PopupGraph terms={graphTerms}/>
+        <PopupPieChart /> 
         <StyledHeader>
         <p></p>
         <Button onClick={() => setPopup(false)}>Main Page</Button>

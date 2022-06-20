@@ -14,7 +14,7 @@ import {
 import { Line } from 'react-chartjs-2';
 
 let StyledDiv =  styled.div`
-  height: 70%;
+  height: 40%;
 `
 
 ChartJS.register(
