@@ -35,7 +35,7 @@ let StyledHeader = styled.div`
 `;
 
 
-const graphTerms: string[] = ["parler", "trump", "jfk", "moon landing", "russia"];
+const graphTerms: string[] = ["parler", "trump", "jfk", "moon landing", "russia", "roe", "court"];
 
 type Props = {
   setPopup: (hasPopup: boolean) => void

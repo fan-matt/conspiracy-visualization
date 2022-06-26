@@ -140,7 +140,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
     json_object.datasets[index].data = result.map((entry) => entry[0]['COUNT(*)']);
   }
   */
-  let colors = ["#ff6e54", "#58508d", "#bc5090", "#ff6361e", "#ffa600", "#dd5182"];
+  let colors = ["#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C", "#468c2a",  "#26b2ff"];
   for (let iteration = 0; iteration < numDays; iteration++){
     currDate.setDate(currDate.getDate() + 1);
     json_object.labels.push(dateToString(currDate));
@@ -150,6 +150,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
       let result = await connection.awaitQuery(query);
       json_object.datasets[index].data.push(result[0]['COUNT(*)']);
       json_object.datasets[index].borderColor = colors[index % colors.length]
+      json_object.datasets[index].fill = false;
     }
   }
   res.json(json_object);
