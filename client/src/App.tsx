@@ -177,7 +177,10 @@ const App = () => {
 
       // Get the rest of the props
       for (let [key, value] of Object.entries(link)) {
-        newLink[key] = value;
+        if (key === "source")
+          newLink["internet_source"] = value;
+        else
+          newLink[key] = value;
       }
 
       if (newLink.source && newLink.target) {
