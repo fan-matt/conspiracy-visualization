@@ -177,7 +177,7 @@ const App = () => {
 
       // Get the rest of the props
       for (let [key, value] of Object.entries(link)) {
-        if (key === "source")
+        if (key === "source")  // prevent aliasing
           newLink["internet_source"] = value;
         else
           newLink[key] = value;
