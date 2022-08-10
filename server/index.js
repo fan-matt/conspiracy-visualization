@@ -154,6 +154,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
    *  keywords: array of strings
    *  startDate: date  
    *  numDays: number of days after the start date
+
    * }
    * 
    * output:
@@ -201,6 +202,16 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   json_object.datasets = keywords.map(keyword =>{
     return {label: keyword, data: [], borderColor: "red", fill: false}
   })
+
+
+  // Function for getting a string in YYYY-MM-DD format
+  function dateToString(date){
+    let mm = date.getMonth()+1;
+    let dd = date.getDate();
+    let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
+    return dateString;
+  }
+
   /*
   for (let iteration = 0; iteration < numDays; iteration++){  // fill dates entry first
     currDate.setDate(currDate.getDate() + 1);
@@ -221,6 +232,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   for (let iteration = 0; iteration < numDays; iteration++){
     currDate.setDate(currDate.getDate() + 1);
     json_object.labels.push(dateToString(currDate));
+
     // Iterates through all the keywords
     for(let index = 0; index < keywords.length; index++){
       let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keywords[index]+"%'";
@@ -228,6 +240,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
       json_object.datasets[index].data.push(result[0]['COUNT(*)']);
       json_object.datasets[index].borderColor = colors[index % colors.length]
       json_object.datasets[index].fill = false;
+
     }
   }
   res.json(json_object);

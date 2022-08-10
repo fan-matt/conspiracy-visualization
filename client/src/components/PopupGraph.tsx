@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import Button from './Button';
+
 import { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
@@ -15,6 +16,7 @@ import { Line } from 'react-chartjs-2';
 
 let StyledDiv =  styled.div`
   height: 40%;
+
 `
 
 ChartJS.register(
@@ -33,6 +35,7 @@ let testData = {"labels":["2022-02-19","2022-02-20","2022-02-21","2022-02-22","2
 
 
 let graphOptions = {
+
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -58,6 +61,7 @@ let graphOptions = {
     },
   },
   color: "white",
+
 };
 
 
@@ -72,6 +76,7 @@ type Props = {
 const PopupGraph = ({ terms }: Props) =>{
   const [ graphData , setGraphData] = useState<any>(testData);
   const [ dateRange, setDateRange ] = useState(30);
+
   // Function for getting a string in YYYY-MM-DD format
   function dateToString(date: Date){
     let mm = date.getMonth()+1;
@@ -112,12 +117,14 @@ const PopupGraph = ({ terms }: Props) =>{
   }, [terms, dateRange]);
 
 
+
   return(
     <StyledDiv>
       <Button onClick={() => setDateRange(30)}>30 days</Button>
       <Button onClick={() => setDateRange(180)}>6 months</Button>
       <Line options={graphOptions} data={graphData} />
     </StyledDiv>
+
   );
 }
 
