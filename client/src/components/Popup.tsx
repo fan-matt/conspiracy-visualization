@@ -58,7 +58,6 @@ const getfreq = async () => {
 getfreq();
 */
 
-const graphTerms: string[] = ["parler", "trump", "jfk", "moon landing", "russia"];
 
 type Props = {
   setPopup: (hasPopup: boolean) => void
