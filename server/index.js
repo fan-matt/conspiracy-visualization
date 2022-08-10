@@ -60,6 +60,91 @@ function InvOrMissingParams(response) {
 	return;
 }
 
+// Function for getting a string in YYYY-MM-DD format
+function dateToString(date){
+  let mm = date.getMonth()+1;
+  let dd = date.getDate();
+  let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
+  return dateString;
+}
+
+app.post("/api/getNumSources", async (req, res) =>{
+  /*
+   * Get the percentage of sources for the current day
+   *
+   * input: 
+   * {
+   *  startDate: date
+   *  numDays: number of days after the start date
+   * }
+   * output:
+   * {
+   *  source: numberOfSources
+   * }
+   * Returns the number of sentences from each source
+   * 
+   */
+
+  // Checking for required params
+  if (
+    req.body.input == undefined || 
+    req.body.input.startDate == undefined || 
+    req.body.input.numDays == undefined){
+      InvOrMissingParams(res);
+      return;
+  }
+
+  // Checking that the types are correct
+  let startDate = new Date(req.body.input.startDate);
+  let numDays = req.body.input.numDays;
+  if (
+    startDate == "Invalid Date" ||
+    !Number.isInteger(numDays)
+  ){
+    InvOrMissingParams(res);
+    return;
+  }
+
+  // Getting the end date
+  let currDate = startDate;
+  let endDate = new Date();
+  endDate.setDate(startDate.getDate() + numDays);
+
+  // Connecting to the server
+  console.log("Establishing SourceRatio connection!");
+  const connection = await ASYNC_pool.awaitGetConnection();
+  connection.on("error", (err)=>{
+    console.log("Connection error!");
+    defError(res,errP);
+    return;
+  });
+  console.log("Connected without error");
+
+  // Making the json object to return
+  let sources = {}
+  for (let iteration = 0; iteration < numDays; iteration++){
+    let daySentences = new Set([]);
+    let query = "SELECT * FROM relationships WHERE Date = " + helper.formattedDateString(currDate);
+    let result = await connection.awaitQuery(query);
+    for (const relationship in result){
+      let curr_obj = JSON.parse(result[relationship].meta.replace(/\s+/g, ''));
+      // If we already had this sentence nothing happens
+      if (!(daySentences.has(curr_obj.sentence))){
+        daySentences.add(curr_obj.sentence);
+        if (curr_obj.source in sources){
+          sources[(curr_obj.source)]++;
+        }
+        else{
+          sources[(curr_obj.source)] = 1;
+        }
+      }
+    }
+    currDate.setDate(currDate.getDate()+1);
+  }
+  console.log(sources);
+  res.json(sources);
+})
+
 app.post("/api/getPastDaysTimeSeries", async (req, res) => {
   /* 
    * Given startDate and keyword, get timeseries of word frequencies for numDays after startDate
@@ -68,7 +153,8 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
    * {
    *  keywords: array of strings
    *  startDate: date  
-   *  numDays: number of days back
+   *  numDays: number of days after the start date
+
    * }
    * 
    * output:
@@ -117,6 +203,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
     return {label: keyword, data: [], borderColor: "red", fill: false}
   })
 
+
   // Function for getting a string in YYYY-MM-DD format
   function dateToString(date){
     let mm = date.getMonth()+1;
@@ -124,6 +211,7 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
     let dateString = [date.getFullYear(), (mm>9 ? "" : "0") + mm,(dd>9 ? "" : "0") + dd].join("-")
     return dateString;
   }
+
   /*
   for (let iteration = 0; iteration < numDays; iteration++){  // fill dates entry first
     currDate.setDate(currDate.getDate() + 1);
@@ -140,17 +228,19 @@ app.post("/api/getPastDaysTimeSeries", async (req, res) => {
     json_object.datasets[index].data = result.map((entry) => entry[0]['COUNT(*)']);
   }
   */
-  let colors = ["#ff6e54", "#58508d", "#bc5090", "#ff6361e", "#ffa600", "#dd5182"];
+  let colors = ["#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C", "#468c2a",  "#26b2ff"];
   for (let iteration = 0; iteration < numDays; iteration++){
     currDate.setDate(currDate.getDate() + 1);
     json_object.labels.push(dateToString(currDate));
-    console.log(`Currently on date ${helper.formattedDateString(currDate)}`);
+
     // Iterates through all the keywords
     for(let index = 0; index < keywords.length; index++){
       let query = "SELECT COUNT(*) FROM nodes WHERE Date = "+helper.formattedDateString(currDate)+" AND node LIKE '%"+keywords[index]+"%'";
       let result = await connection.awaitQuery(query);
       json_object.datasets[index].data.push(result[0]['COUNT(*)']);
       json_object.datasets[index].borderColor = colors[index % colors.length]
+      json_object.datasets[index].fill = false;
+
     }
   }
   res.json(json_object);
